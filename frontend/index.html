@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RideShare — Smart Carpooling</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>🚗 RideShare</h1>
+    <p>Smart carpooling — save money, save the planet</p>
+  </div>
+  <div class="header-right">
+    <div class="user-info">
+      <span id="user-greeting">👤 Loading...</span>
+      <span id="user-role-badge"></span>
+    </div>
+    <span id="connection-status" class="disconnected">⚫ Connecting...</span>
+    <button onclick="logout()" class="logout-btn">Logout</button>
+  </div>
+</header>
+
+<main>
+
+    <!-- Mobile Bottom Navigation -->
+<nav class="mobile-nav">
+  <button class="active" onclick="mobileNav('book', this)">
+    <span>🚗</span>
+    <span>Book</span>
+  </button>
+  <button onclick="mobileNav('rides', this)">
+    <span>📋</span>
+    <span>Rides</span>
+  </button>
+  <button onclick="mobileNav('driver', this)">
+    <span>🧭</span>
+    <span>Driver</span>
+  </button>
+</nav>
+
+  <!-- MAP -->
+  <div id="map-container">
+    <div id="map"></div>
+
+    <!-- Search Controls -->
+    <div id="map-controls">
+      <div class="search-row">
+        <span class="dot green"></span>
+        <input id="pickup-search" type="text" placeholder="Search pickup..."/>
+        <button onclick="searchLocation('pickup')">📍</button>
+      </div>
+      <div class="search-row">
+        <span class="dot red"></span>
+        <input id="destination-search" type="text" placeholder="Search destination..."/>
+        <button onclick="searchLocation('destination')">🏁</button>
+      </div>
+      <div id="search-status"></div>
+      <button id="reset-btn" onclick="resetMap()">🔄 Reset</button>
+    </div>
+
+    <!-- Route Info Bar -->
+    <div id="route-info" style="display:none">
+      <span id="route-distance">📏 --</span>
+      <span id="route-duration">⏱️ --</span>
+      <span id="route-fare">💰 Est: --</span>
+    </div>
+
+    <!-- Driver Tracking Marker Info -->
+    <div id="driver-info" style="display:none">
+      <span>🚗 Driver is on the way!</span>
+      <span id="driver-name-display"></span>
+    </div>
+  </div>
+
+  <!-- PANEL -->
+  <div id="panel">
+
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('book')">🚗 Book</button>
+      <button class="tab" onclick="switchTab('rides')">📋 Rides</button>
+      <button class="tab" onclick="switchTab('driver')">🧭 Driver</button>
+    </div>
+
+    <!-- BOOK TAB -->
+    <div id="tab-book" class="tab-content active">
+      <h2>Book a Ride</h2>
+
+      <input id="name" type="text" placeholder="👤 Your name"/>
+
+      <!-- Ride Type Selector -->
+      <div class="section-label">Choose Ride Type</div>
+      <div class="ride-types">
+        <div class="ride-type-card active" onclick="selectRideType('bike')" id="type-bike">
+          <span class="ride-icon">🏍️</span>
+          <span class="ride-name">Bike</span>
+          <span class="ride-capacity">1 seat</span>
+          <span class="ride-price">₹7/km</span>
+        </div>
+        <div class="ride-type-card" onclick="selectRideType('auto')" id="type-auto">
+          <span class="ride-icon">🛺</span>
+          <span class="ride-name">Auto</span>
+          <span class="ride-capacity">3 seats</span>
+          <span class="ride-price">₹10/km</span>
+        </div>
+        <div class="ride-type-card" onclick="selectRideType('solo')" id="type-solo">
+          <span class="ride-icon">🚗</span>
+          <span class="ride-name">Solo</span>
+          <span class="ride-capacity">1 seat</span>
+          <span class="ride-price">₹14/km</span>
+        </div>
+        <div class="ride-type-card" onclick="selectRideType('shared')" id="type-shared">
+          <span class="ride-icon">🚗</span>
+          <span class="ride-name">Shared</span>
+          <span class="ride-capacity">3 seats</span>
+          <span class="ride-price">₹6/km</span>
+        </div>
+      </div>
+
+      <!-- Share Toggle (only for shared) -->
+      <div id="share-toggle" style="display:none">
+        <label class="toggle-label">
+          <input type="checkbox" id="allow-sharing" checked/>
+          <span class="toggle-text">Allow ride sharing</span>
+        </label>
+        <p class="toggle-hint">Share your ride & save up to 50%!</p>
+      </div>
+
+      <!-- Schedule Option -->
+      <div class="section-label">Schedule (optional)</div>
+      <input type="datetime-local" id="scheduled-time"/>
+
+      <!-- Location fields (auto-filled from map) -->
+      <input id="pickup" type="text" placeholder="📍 Pickup (search above)" readonly/>
+      <input id="destination" type="text" placeholder="🏁 Destination (search above)" readonly/>
+
+      <!-- Fare Estimate Box -->
+      <div id="fare-estimate-box" style="display:none">
+        <div class="fare-row">
+          <span>🚗 Ride Type</span>
+          <span id="fare-type">--</span>
+        </div>
+        <div class="fare-row">
+          <span>📏 Distance</span>
+          <span id="fare-distance">--</span>
+        </div>
+        <div class="fare-row highlight">
+          <span>💰 Estimated Fare</span>
+          <span id="fare-amount">--</span>
+        </div>
+        <div class="fare-row saving" id="fare-saving-row" style="display:none">
+          <span>🌱 You save (shared)</span>
+          <span id="fare-saving">--</span>
+        </div>
+      </div>
+
+      <div id="step-hint">🔍 Search pickup & destination on the map</div>
+
+      <button onclick="requestRide()" id="request-btn" disabled>
+        Book Ride 🚗
+      </button>
+
+      <div id="status-box"></div>
+    </div>
+
+    <!-- RIDES TAB -->
+    <div id="tab-rides" class="tab-content">
+      <h2>Active Rides</h2>
+      <div id="rides-container">No rides yet...</div>
+    </div>
+
+    <!-- DRIVER TAB -->
+    <div id="tab-driver" class="tab-content">
+      <h2>Driver Mode 🧭</h2>
+      <p class="driver-hint">Simulate a driver sending live location updates</p>
+      <input id="driver-name" type="text" placeholder="👤 Driver name"/>
+      <input id="driver-ride-id" type="number" placeholder="🔢 Ride ID to update"/>
+      <button onclick="startDriverTracking()">▶️ Start Sharing Location</button>
+      <button onclick="stopDriverTracking()" id="stop-tracking-btn" style="display:none; background:#ff4d4d">⏹️ Stop</button>
+      <div id="driver-status"></div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Rating Modal -->
+<div id="rating-modal" style="display:none">
+  <div class="modal-overlay">
+    <div class="modal-box">
+      <h3>⭐ Rate Your Ride</h3>
+      <p id="rating-ride-info"></p>
+      <div class="stars" id="passenger-stars">
+        <p>Rate the Driver:</p>
+        <span onclick="setRating('driver', 1)">⭐</span>
+        <span onclick="setRating('driver', 2)">⭐</span>
+        <span onclick="setRating('driver', 3)">⭐</span>
+        <span onclick="setRating('driver', 4)">⭐</span>
+        <span onclick="setRating('driver', 5)">⭐</span>
+      </div>
+      <button onclick="submitRating()">Submit Rating</button>
+      <button class="skip-btn" onclick="closeRating()">Skip</button>
+    </div>
+  </div>
+</div>
+
+<script src="http://localhost:3000/socket.io/socket.io.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

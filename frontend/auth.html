@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RideShare — Login</title>
+  <link rel="stylesheet" href="auth.css"/>
+</head>
+<body>
+
+<div class="auth-container">
+
+  <!-- LOGO -->
+  <div class="logo">
+    <h1>🚗 RideShare</h1>
+    <p>Smart carpooling — save money, save the planet</p>
+  </div>
+
+  <!-- TABS -->
+  <div class="auth-tabs">
+    <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+    <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+  </div>
+
+  <!-- LOGIN FORM -->
+  <div id="login-form" class="auth-form active">
+    <h2>Welcome Back 👋</h2>
+
+    <div class="input-group">
+      <label>Email</label>
+      <input id="login-email" type="email" placeholder="you@email.com"/>
+    </div>
+
+    <div class="input-group">
+      <label>Password</label>
+      <input id="login-password" type="password" placeholder="••••••••"/>
+    </div>
+
+    <div id="login-error" class="error-msg"></div>
+
+    <button onclick="login()" class="auth-btn">
+      Login →
+    </button>
+
+    <p class="switch-text">
+      No account?
+      <span onclick="switchAuthTab('signup')">Sign up free</span>
+    </p>
+  </div>
+
+  <!-- SIGNUP FORM -->
+  <div id="signup-form" class="auth-form">
+    <h2>Create Account 🚀</h2>
+
+    <!-- Role Selector -->
+    <div class="role-selector">
+      <div class="role-card active" onclick="selectRole('passenger')" id="role-passenger">
+        <span>🧍</span>
+        <strong>Passenger</strong>
+        <small>Book rides</small>
+      </div>
+      <div class="role-card" onclick="selectRole('driver')" id="role-driver">
+        <span>🧭</span>
+        <strong>Driver</strong>
+        <small>Give rides</small>
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label>Full Name</label>
+      <input id="signup-name" type="text" placeholder="Your full name"/>
+    </div>
+
+    <div class="input-group">
+      <label>Email</label>
+      <input id="signup-email" type="email" placeholder="you@email.com"/>
+    </div>
+
+    <div class="input-group">
+      <label>Phone</label>
+      <input id="signup-phone" type="tel" placeholder="+91 98765 43210"/>
+    </div>
+
+    <div class="input-group">
+      <label>Password</label>
+      <input id="signup-password" type="password" placeholder="Min 6 characters"/>
+    </div>
+
+    <div id="signup-error" class="error-msg"></div>
+
+    <button onclick="signup()" class="auth-btn">
+      Create Account →
+    </button>
+
+    <p class="switch-text">
+      Have an account?
+      <span onclick="switchAuthTab('login')">Login</span>
+    </p>
+  </div>
+
+</div>
+
+<script src="auth.js"></script>
+</body>
+</html>
