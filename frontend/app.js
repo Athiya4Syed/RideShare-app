@@ -14,7 +14,9 @@ function logout() {
   window.location.href = 'auth.html';
 }
 
-const BACKEND = 'http://localhost:3000';
+const BACKEND = window.location.hostname === 'localhost'
+  ? 'http://localhost:3000'
+  : 'https://rideshare-backend-e3ka.onrender.com';
 
 // Map state
 let map, pickupMarker, destinationMarker, routingControl, driverMarker;

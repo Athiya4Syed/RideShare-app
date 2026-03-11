@@ -1,4 +1,6 @@
-const BACKEND = 'http://localhost:3000';
+const BACKEND = window.location.hostname === 'localhost'
+  ? 'http://localhost:3000'
+  : 'https://rideshare-backend-e3ka.onrender.com';
 let selectedRole = 'passenger';
 
 // ─── TAB SWITCHING ───────────────────────────────────────────────
