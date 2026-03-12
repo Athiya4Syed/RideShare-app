@@ -176,7 +176,10 @@ main { display:flex; height:calc(100vh - 70px); }
 .tab-content {
   display:none; flex-direction:column;
   gap:11px; padding:16px 14px;
-  overflow-y:auto; flex:1;
+  overflow-y:scroll;
+  flex:1;
+  max-height: calc(100vh - 140px);
+  scroll-behavior: smooth;
 }
 .tab-content.active { display:flex; }
 
