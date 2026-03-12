@@ -524,3 +524,45 @@ function setButtonLoading(loading) {
     btn.disabled = false;
   }
 }
+// ─── PWA INSTALL ─────────────────────────────────────────────────
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+
+  // Show install button
+  const installBtn = document.getElementById('install-btn');
+  if (installBtn) {
+    installBtn.style.display = 'block';
+    installBtn.style.cssText = `
+      padding: 7px 14px;
+      background: #00ff88;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: bold;
+      animation: pulse 2s infinite;
+    `;
+  }
+
+  showToast('📲 You can install RideShare as an app!', 5000);
+});
+
+async function installApp() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') {
+    showToast('🎉 RideShare installed successfully!');
+    document.getElementById('install-btn').style.display = 'none';
+  }
+  deferredPrompt = null;
+}
+
+window.addEventListener('appinstalled', () => {
+  showToast('🎉 RideShare installed! Check your home screen!');
+  document.getElementById('install-btn').style.display = 'none';
+});
