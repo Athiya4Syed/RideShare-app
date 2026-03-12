@@ -220,17 +220,25 @@
   </div>
 </div>
 
+<!-- Socket.io from LIVE backend -->
 <script src="https://rideshare-backend-e3ka.onrender.com/socket.io/socket.io.js"></script>
+
+<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Leaflet Routing -->
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
+<!-- Your app -->
 <script src="app.js"></script>
-<!-- PWA Service Worker Registration -->
+
+<!-- PWA Service Worker -->
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('✅ Service Worker registered!', reg.scope))
-        .catch(err => console.log('❌ SW registration failed:', err));
+        .then(reg => console.log('✅ SW registered!', reg.scope))
+        .catch(err => console.log('❌ SW failed:', err));
     });
   }
 </script>
