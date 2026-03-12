@@ -282,7 +282,12 @@ async function requestRide() {
 }
 
 // ─── SOCKET.IO ───────────────────────────────────────────────────
-const socket = io(BACKEND);
+const socket = io('https://rideshare-backend-e3ka.onrender.com', {
+  transports: ['websocket', 'polling'],
+  reconnection: true,
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000
+});
 
 socket.on('connect', () => {
   document.getElementById('connection-status').textContent = '🟢 Connected';
