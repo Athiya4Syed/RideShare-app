@@ -41,35 +41,6 @@
 
 <main>
 
-  <!-- AI Assistant Button -->
-<div id="ai-assistant">
-  <button id="ai-btn" onclick="toggleAIChat()" title="AI Ride Assistant">
-    🤖
-  </button>
-  
-  <div id="ai-chat" style="display:none">
-    <div id="ai-chat-header">
-      <span>🤖 AI Ride Assistant</span>
-      <button onclick="toggleAIChat()">✕</button>
-    </div>
-    <div id="ai-messages">
-      <div class="ai-message ai-bot">
-        👋 Hi! Tell me where you want to go and I'll set everything up for you!
-        <br/><br/>
-        Try: <em>"I need a cheap ride from Bandra to Airport tomorrow 9am"</em>
-      </div>
-    </div>
-    <div id="ai-input-area">
-      <input 
-        type="text" 
-        id="ai-input" 
-        placeholder="Type your ride request..."
-        onkeypress="if(event.key==='Enter') sendAIMessage()"
-      />
-      <button onclick="sendAIMessage()">Send</button>
-    </div>
-  </div>
-</div>
 
     <!-- Mobile Bottom Navigation -->
 <nav class="mobile-nav">
@@ -274,5 +245,35 @@
     });
   }
 </script>
+
+ <!-- AI Assistant Button -->
+<div id="ai-assistant">
+  <button id="ai-btn" onclick="toggleAIChat()" title="AI Ride Assistant">
+    🤖
+  </button>
+  
+  <div id="ai-chat" style="display:none">
+    <div id="ai-chat-header">
+      <span>🤖 AI Ride Assistant</span>
+      <button onclick="toggleAIChat()">✕</button>
+    </div>
+    <div id="ai-messages">
+      <div class="ai-message ai-bot">
+        👋 Hi! Tell me where you want to go and I'll set everything up for you!
+        <br/><br/>
+        Try: <em>"I need a cheap ride from Bandra to Airport tomorrow 9am"</em>
+      </div>
+    </div>
+    <div id="ai-input-area">
+      <input 
+        type="text" 
+        id="ai-input" 
+        placeholder="Type your ride request..."
+        onkeypress="if(event.key==='Enter') sendAIMessage()"
+      />
+      <button onclick="sendAIMessage()">Send</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
