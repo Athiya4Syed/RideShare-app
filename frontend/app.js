@@ -690,3 +690,33 @@ function addAIMessage(text, type, id = null) {
   messages.appendChild(div);
   messages.scrollTop = messages.scrollHeight;
 }
+
+// ─── AI BUTTON INJECTED VIA JS ────────────────────────────────
+(function() {
+  const div = document.createElement('div');
+  div.id = 'ai-assistant';
+  div.innerHTML = `
+    <button id="ai-btn" onclick="toggleAIChat()" title="AI Ride Assistant">🤖</button>
+    <div id="ai-chat" style="display:none">
+      <div id="ai-chat-header">
+        <span>🤖 AI Ride Assistant</span>
+        <button onclick="toggleAIChat()">✕</button>
+      </div>
+      <div id="ai-messages">
+        <div class="ai-message ai-bot">
+          👋 Hi! Tell me where you want to go!<br><br>
+          Try: "Cheap ride from Bandra to Airport tomorrow 9am"
+        </div>
+      </div>
+      <div id="ai-input-area">
+        <input type="text" id="ai-input" placeholder="Type your ride request..."/>
+        <button onclick="sendAIMessage()">Send</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(div);
+
+  document.getElementById('ai-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendAIMessage();
+  });
+})();
