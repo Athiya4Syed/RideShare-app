@@ -11,7 +11,7 @@ const app = express();
 const server = http.createServer(app);
 
 // CORS
-//app.use(cors({
+app.use(cors({ origin :"*"}));
 //  origin: [
 //    "https://ride-share-eyl4dh4n5-athiya4syeds-projects.vercel.app",
 //   "http://localhost:5500",
@@ -20,16 +20,12 @@ const server = http.createServer(app);
 //  methods: ["GET", "POST"]
 //}));
 
-/*const io = new Server(server, {
+const io = new Server(server, {
   cors: {
-    origin: [
-      "https://ride-share-eyl4dh4n5-athiya4syeds-projects.vercel.app",
-      "http://localhost:5500",
-      "http://127.0.0.1:5500"
-    ],
+    origin: "*",
     methods: ["GET", "POST"]
   }
-}); */
+}); 
 
 app.use(express.json());
 
