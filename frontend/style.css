@@ -654,3 +654,23 @@ main { display:flex; height:calc(100vh - 70px); }
   box-shadow:0 4px 20px rgba(124,58,237,0.5);
   display:block !important;
 }
+
+#ai-assistant {
+  position: fixed !important;
+  bottom: 80px !important;
+  left: 20px !important;
+  z-index: 99999 !important;
+  display: block !important;
+}
+
+#ai-btn {
+  width: 55px !important;
+  height: 55px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, #7c3aed, #00d4ff) !important;
+  border: none !important;
+  font-size: 1.5rem !important;
+  cursor: pointer !important;
+  display: block !important;
+  box-shadow: 0 4px 20px rgba(124,58,237,0.5) !important;
+}
