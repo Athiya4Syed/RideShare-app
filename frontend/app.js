@@ -300,6 +300,14 @@ socket.on('connect', () => {
   }
 });
 
+socket.on('connect_error', (err) => {
+  const el = document.getElementById('connection-status');
+  if (el) {
+    el.textContent = '🔴 Disconnected';
+    el.className = 'disconnected';
+  }
+});
+
 socket.on('disconnect', () => {
   document.getElementById('connection-status').textContent = '🔴 Disconnected';
   document.getElementById('connection-status').className = 'disconnected';
