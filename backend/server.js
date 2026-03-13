@@ -309,11 +309,7 @@ app.post('/driver/location', authMiddleware, (req, res) => {
 });
 
 // ─── CLAUDE AI ROUTE ─────────────────────────────────────────────
-const Anthropic = require('@anthropic-ai/sdk');
 
-const anthropic = new Anthropic({
-  apiKey: process.env.CLAUDE_API_KEY
-});
 
 app.post('/ai/parse-ride', async (req, res) => {
   const { message } = req.body;
