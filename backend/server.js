@@ -304,6 +304,61 @@ app.post('/driver/location', authMiddleware, (req, res) => {
   res.json({ message: 'Location updated' });
 });
 
+// ─── CLAUDE AI ROUTE ─────────────────────────────────────────────
+const Anthropic = require('@anthropic-ai/sdk');
+
+const anthropic = new Anthropic({
+  apiKey: process.env.CLAUDE_API_KEY
+});
+
+app.post('/ai/parse-ride', async (req, res) => {
+  const { message } = req.body;
+
+  if (!message) return res.status(400).json({ error: 'Message required' });
+
+  try {
+    const response = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 500,
+      messages: [{
+        role: 'user',
+        content: `You are a ride-sharing assistant for India. Extract ride details from this message and return ONLY a JSON object with no extra text:
+
+Message: "${message}"
+
+Return this exact JSON format:
+{
+  "pickup": "location name or null",
+  "destination": "location name or null", 
+  "rideType": "bike/auto/solo/shared or null",
+  "scheduledTime": "ISO datetime or null",
+  "allowSharing": true/false,
+  "confidence": 0-100,
+  "suggestion": "helpful message to user"
+}
+
+Rules:
+- rideType: bike=1 person motorcycle, auto=3 person autorickshaw, solo=private car, shared=shared car
+- If message says "cheap/budget" suggest bike or shared
+- If message says "fast/quick" suggest solo
+- If message says "family/group" suggest auto or shared
+- scheduledTime: convert "tomorrow 9am" to proper ISO datetime (today is ${new Date().toISOString()})
+- allowSharing: true if they mention sharing/cheap/budget
+- suggestion: give a helpful tip in 1 sentence`
+      }]
+    });
+
+    const text = response.content[0].text.trim();
+    const clean = text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    res.json({ success: true, data: parsed });
+  } catch (err) {
+    console.error('Claude AI error:', err);
+    res.status(500).json({ error: 'AI parsing failed' });
+  }
+});
+
 // ─── SOCKET.IO ───────────────────────────────────────────────────
 io.on('connection', async (socket) => {
   console.log('✅ Connected:', socket.id);

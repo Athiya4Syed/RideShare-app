@@ -588,3 +588,105 @@ window.addEventListener('appinstalled', () => {
   showToast('🎉 RideShare installed! Check your home screen!');
   document.getElementById('install-btn').style.display = 'none';
 });
+
+// ─── AI ASSISTANT ─────────────────────────────────────────────────
+function toggleAIChat() {
+  const chat = document.getElementById('ai-chat');
+  chat.style.display = chat.style.display === 'none' ? 'block' : 'none';
+  if (chat.style.display === 'block') {
+    document.getElementById('ai-input').focus();
+  }
+}
+
+async function sendAIMessage() {
+  const input = document.getElementById('ai-input');
+  const message = input.value.trim();
+  if (!message) return;
+
+  // Add user message
+  addAIMessage(message, 'user');
+  input.value = '';
+
+  // Add loading
+  const loadingId = 'loading-' + Date.now();
+  addAIMessage('🤔 Thinking...', 'loading', loadingId);
+
+  try {
+    const res = await fetch(`${BACKEND}/ai/parse-ride`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ message })
+    });
+
+    const data = await res.json();
+    
+    // Remove loading
+    document.getElementById(loadingId)?.remove();
+
+    if (data.success) {
+      const ai = data.data;
+
+      // Auto fill form fields
+      let filled = [];
+
+      if (ai.pickup) {
+        document.getElementById('pickup-search').value = ai.pickup;
+        filled.push(`📍 Pickup: ${ai.pickup}`);
+        await searchLocation('pickup');
+      }
+
+      if (ai.destination) {
+        document.getElementById('destination-search').value = ai.destination;
+        filled.push(`🏁 Destination: ${ai.destination}`);
+        await searchLocation('destination');
+      }
+
+      if (ai.rideType) {
+        selectRideType(ai.rideType);
+        filled.push(`🚗 Ride type: ${ai.rideType}`);
+      }
+
+      if (ai.scheduledTime) {
+        const dt = new Date(ai.scheduledTime);
+        const local = new Date(dt.getTime() - dt.getTimezoneOffset() * 60000)
+          .toISOString().slice(0, 16);
+        document.getElementById('scheduled-time').value = local;
+        filled.push(`⏰ Scheduled: ${dt.toLocaleString()}`);
+      }
+
+      if (ai.allowSharing) {
+        document.getElementById('allow-sharing').checked = true;
+      }
+
+      // Show response
+      const response = filled.length > 0
+        ? `✅ Got it! I've filled in:\n${filled.join('\n')}\n\n💡 ${ai.suggestion}`
+        : `💡 ${ai.suggestion || "I couldn't find specific details. Try: 'Ride from Mumbai to Pune tomorrow 9am'"}`;
+
+      addAIMessage(response, 'bot');
+
+      // Switch to book tab
+      document.getElementById('tab-book').click();
+
+    } else {
+      addAIMessage('❌ Sorry, I couldn\'t understand that. Try: "I need a ride from Bandra to Airport"', 'bot');
+    }
+  } catch (err) {
+    document.getElementById(loadingId)?.remove();
+    addAIMessage('❌ AI service unavailable. Please try again!', 'bot');
+  }
+}
+
+function addAIMessage(text, type, id = null) {
+  const messages = document.getElementById('ai-messages');
+  const div = document.createElement('div');
+  div.className = `ai-message ai-${type}`;
+  if (id) div.id = id;
+  div.style.whiteSpace = 'pre-line';
+  div.textContent = text;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
