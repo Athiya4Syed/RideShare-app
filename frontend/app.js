@@ -291,8 +291,13 @@ const socket = io('https://rideshare-backend-e3ka.onrender.com', {
 });
 
 socket.on('connect', () => {
-  document.getElementById('connection-status').textContent = '🟢 Connected';
-  document.getElementById('connection-status').className = 'connected';
+  console.log('✅ Socket connected!', socket.id);
+  const el = document.getElementById('connection-status');
+  if (el) {
+    el.textContent = '🟢 Connected';
+    el.className = 'connected';
+    el.style.color = '#00ff88';
+  }
 });
 
 socket.on('disconnect', () => {
