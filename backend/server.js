@@ -1,3 +1,4 @@
+
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
@@ -6,6 +7,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
+
+const Anthropic = require('@anthropic-ai/sdk');
+const anthropic = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
 
 const app = express();
 const server = http.createServer(app);
