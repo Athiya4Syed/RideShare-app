@@ -283,10 +283,11 @@ async function requestRide() {
 
 // ─── SOCKET.IO ───────────────────────────────────────────────────
 const socket = io('https://rideshare-backend-e3ka.onrender.com', {
-  transports: ['websocket', 'polling'],
+  transports: ['polling', 'websocket'],
   reconnection: true,
-  reconnectionAttempts: 5,
-  reconnectionDelay: 1000
+  reconnectionAttempts: 10,
+  reconnectionDelay: 2000,
+  timeout: 20000
 });
 
 socket.on('connect', () => {
