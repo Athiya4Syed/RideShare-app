@@ -1,5 +1,4 @@
-const rateLimit = require('express-rate-limit');
-const helmet = require('helmet');
+
 const { body, validationResult } = require('express-validator');
 const express = require('express');
 const cors = require('cors');
@@ -140,7 +139,7 @@ function authMiddleware(req, res, next) {
 app.get('/', (req, res) => res.json({ message: '🚗 RideShare API running!' }));
 
 // sighup
-app.post('/auth/signup', authLimiter, [
+app.post('/auth/signup', [
   body('name').trim().notEmpty().withMessage('Name is required').isLength({ max: 50 }),
   body('email').isEmail().withMessage('Valid email required').normalizeEmail(),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
