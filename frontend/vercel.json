@@ -1,9 +1,6 @@
 {
   "rewrites": [
     { "source": "/admin", "destination": "/admin.html" },
-    { "source": "/sw.js", "destination": "/sw.js" },
-    { "source": "/manifest.json", "destination": "/manifest.json" },
-    { "source": "/icons/(.*)", "destination": "/icons/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
