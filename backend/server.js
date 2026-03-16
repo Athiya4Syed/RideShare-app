@@ -1,4 +1,6 @@
-
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const { body, validationResult } = require('express-validator');
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
@@ -40,6 +42,38 @@ const io = new Server(server, {
 }); 
 
 app.use(express.json());
+
+// ─── SECURITY ─────────────────────────────────────────────────
+
+// Helmet - sets secure HTTP headers
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false
+}));
+
+// Rate limiting - prevent abuse
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // max 100 requests per 15 mins
+  message: { error: '⚠️ Too many requests! Please try again later.' }
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10, // max 10 login attempts per 15 mins
+  message: { error: '⚠️ Too many login attempts! Try again in 15 minutes.' }
+});
+
+const rideLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5, // max 5 ride requests per minute
+  message: { error: '⚠️ Too many ride requests! Please wait.' }
+});
+
+app.use('/api', limiter);
+app.use('/auth/login', authLimiter);
+app.use('/auth/signup', authLimiter);
+app.use('/ride/request', rideLimiter);
 
 // ─── SUPABASE CLIENT ─────────────────────────────────────────────
 const supabase = createClient(
@@ -105,15 +139,20 @@ function authMiddleware(req, res, next) {
 
 app.get('/', (req, res) => res.json({ message: '🚗 RideShare API running!' }));
 
-// SIGNUP
-app.post('/auth/signup', async (req, res) => {
-  const { name, email, password, role, phone } = req.body;
-
-  if (!name || !email || !password || !role) {
-    return res.status(400).json({ error: 'All fields required' });
+// sighup
+app.post('/auth/signup', authLimiter, [
+  body('name').trim().notEmpty().withMessage('Name is required').isLength({ max: 50 }),
+  body('email').isEmail().withMessage('Valid email required').normalizeEmail(),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('role').isIn(['passenger', 'driver']).withMessage('Role must be passenger or driver')
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ error: errors.array()[0].msg });
   }
 
-  // Check if email exists
+  const { name, email, password, role, phone } = req.body;
+
   const { data: existing } = await supabase
     .from('users')
     .select('id')
@@ -491,4 +530,19 @@ io.on('connection', async (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
+
+// ─── GLOBAL ERROR HANDLER ─────────────────────────────────────
+app.use((err, req, res, next) => {
+  console.error('❌ Error:', err.message);
+  res.status(500).json({ 
+    error: 'Something went wrong!',
+    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: '❌ Route not found' });
+});
+
 server.listen(PORT, () => console.log(`🚀 Server on http://localhost:${PORT}`));
