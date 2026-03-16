@@ -11,6 +11,14 @@ require('dotenv').config();
 const Anthropic = require('@anthropic-ai/sdk');
 const anthropic = new Anthropic({ apiKey: process.env.CLAUDE_API_KEY });
 
+const webpush = require('web-push');
+
+webpush.setVapidDetails(
+  process.env.VAPID_EMAIL,
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+);
+
 const app = express();
 const server = http.createServer(app);
 
@@ -357,6 +365,56 @@ Rules:
     console.error('Claude AI error:', err);
     res.status(500).json({ error: 'AI parsing failed' });
   }
+});
+
+// ─── PUSH NOTIFICATIONS ──────────────────────────────────────
+
+// Store subscriptions in memory (we'll move to DB later)
+const pushSubscriptions = new Map();
+
+// Subscribe to push notifications
+app.post('/push/subscribe', authMiddleware, async (req, res) => {
+  const { subscription } = req.body;
+  if (!subscription) return res.status(400).json({ error: 'Subscription required' });
+
+  pushSubscriptions.set(req.user.id, subscription);
+  console.log(`🔔 Push subscription saved for ${req.user.name}`);
+  res.json({ success: true, message: '✅ Subscribed to notifications!' });
+});
+
+// Unsubscribe
+app.post('/push/unsubscribe', authMiddleware, (req, res) => {
+  pushSubscriptions.delete(req.user.id);
+  res.json({ success: true });
+});
+
+// Send push notification helper
+async function sendPushNotification(userId, title, body, url = '/') {
+  const subscription = pushSubscriptions.get(userId);
+  if (!subscription) return;
+
+  try {
+    await webpush.sendNotification(subscription, JSON.stringify({
+      title,
+      body,
+      url
+    }));
+    console.log(`🔔 Push sent to user ${userId}`);
+  } catch (err) {
+    console.error('Push error:', err);
+    pushSubscriptions.delete(userId);
+  }
+}
+
+// Test push notification
+app.post('/push/test', authMiddleware, async (req, res) => {
+  await sendPushNotification(
+    req.user.id,
+    '🚗 RideShare Test',
+    'Push notifications are working!',
+    '/'
+  );
+  res.json({ success: true, message: 'Test notification sent!' });
 });
 
 // ─── SOCKET.IO ───────────────────────────────────────────────────

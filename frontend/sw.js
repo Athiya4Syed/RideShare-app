@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rideshare-v2';
+const CACHE_NAME = 'rideshare-v3';
 const ASSETS = [
   '/index.html',
   '/auth.html',
@@ -10,7 +10,6 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (e) => {
-  console.log('📦 SW installing...');
   e.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(ASSETS))
@@ -19,7 +18,6 @@ self.addEventListener('install', (e) => {
 });
 
 self.addEventListener('activate', (e) => {
-  console.log('✅ SW activated!');
   e.waitUntil(
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
@@ -45,5 +43,38 @@ self.addEventListener('fetch', (e) => {
       .catch(() => caches.match(e.request)
         .then(cached => cached || caches.match('/index.html'))
       )
+  );
+});
+
+// ─── PUSH NOTIFICATIONS ──────────────────────────────────────
+self.addEventListener('push', (event) => {
+  const data = event.data?.json() || {};
+  
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'RideShare', {
+      body: data.body || 'You have a new notification',
+      icon: '/icons/icon.svg',
+      badge: '/icons/icon.svg',
+      vibrate: [100, 50, 100],
+      data: { url: data.url || '/' },
+      actions: [
+        { action: 'open', title: '🚗 Open App' },
+        { action: 'close', title: '✕ Dismiss' }
+      ]
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  if (event.action === 'close') return;
+  
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then(clientList => {
+      for (const client of clientList) {
+        if (client.url === '/' && 'focus' in client) return client.focus();
+      }
+      if (clients.openWindow) return clients.openWindow(event.notification.data.url);
+    })
   );
 });

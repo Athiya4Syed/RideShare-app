@@ -720,3 +720,59 @@ function addAIMessage(text, type, id = null) {
     if (e.key === 'Enter') sendAIMessage();
   });
 })();
+
+// ─── PUSH NOTIFICATIONS ──────────────────────────────────────
+const VAPID_PUBLIC_KEY = 'YOUR_VAPID_PUBLIC_KEY_HERE';
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; i++) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+async function subscribeToPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    console.log('Push not supported');
+    return;
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
+
+    await fetch(`${BACKEND}/push/subscribe`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ subscription })
+    });
+
+    console.log('✅ Push notifications enabled!');
+    showToast('🔔 Notifications enabled!');
+  } catch (err) {
+    console.error('Push subscription error:', err);
+  }
+}
+
+async function testPushNotification() {
+  await fetch(`${BACKEND}/push/test`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  showToast('🔔 Test notification sent!');
+}
+
+// Auto subscribe when page loads
+window.addEventListener('load', () => {
+  setTimeout(subscribeToPush, 3000);
+});
