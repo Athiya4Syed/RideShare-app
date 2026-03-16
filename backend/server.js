@@ -58,21 +58,21 @@ const limiter = rateLimit({
   message: { error: '⚠️ Too many requests! Please try again later.' }
 });
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 50, // max 10 login attempts per 15 mins
-  message: { error: '⚠️ Too many login attempts! Try again in 15 minutes.' }
-});
+//const authLimiter = rateLimit({
+// windowMs: 15 * 60 * 1000,
+//  max: 50, // max 10 login attempts per 15 mins
+//  message: { error: '⚠️ Too many login attempts! Try again in 15 minutes.' }
+//});
 
-const rideLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 5, // max 5 ride requests per minute
-  message: { error: '⚠️ Too many ride requests! Please wait.' }
-});
+//const rideLimiter = rateLimit({
+//  windowMs: 60 * 1000, // 1 minute
+//  max: 5, // max 5 ride requests per minute
+ // message: { error: '⚠️ Too many ride requests! Please wait.' }
+//});
 
 // Only limit auth routes
-app.use('/auth/login', authLimiter);
-app.use('/auth/signup', authLimiter);
+//app.use('/auth/login', authLimiter);
+//app.use('/auth/signup', authLimiter);
 
 // ─── SUPABASE CLIENT ─────────────────────────────────────────────
 const supabase = createClient(
