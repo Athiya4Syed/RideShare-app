@@ -1,5 +1,3 @@
-const CACHE_NAME = 'rideshare-v4';
-
 const CACHE_NAME = 'rideshare-v3';
 const ASSETS = [
   '/index.html',
@@ -8,7 +6,7 @@ const ASSETS = [
   '/auth.js',
   '/style.css',
   '/auth.css',
-  
+  '/manifest.json',
 ];
 
 self.addEventListener('install', (e) => {

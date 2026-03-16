@@ -58,6 +58,22 @@ const limiter = rateLimit({
   message: { error: '⚠️ Too many requests! Please try again later.' }
 });
 
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 50, // max 10 login attempts per 15 mins
+  message: { error: '⚠️ Too many login attempts! Try again in 15 minutes.' }
+});
+
+const rideLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5, // max 5 ride requests per minute
+  message: { error: '⚠️ Too many ride requests! Please wait.' }
+});
+
+app.use('/const liapi', limiter);
+app.use('/auth/login', authLimiter);
+app.use('/auth/signup', authLimiter);
+app.use('/ride/request', rideLimiter);
 
 // ─── SUPABASE CLIENT ─────────────────────────────────────────────
 const supabase = createClient(
@@ -124,7 +140,7 @@ function authMiddleware(req, res, next) {
 app.get('/', (req, res) => res.json({ message: '🚗 RideShare API running!' }));
 
 // sighup
-app.post('/auth/signup',  [
+app.post('/auth/signup', authLimiter, [
   body('name').trim().notEmpty().withMessage('Name is required').isLength({ max: 50 }),
   body('email').isEmail().withMessage('Valid email required').normalizeEmail(),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
