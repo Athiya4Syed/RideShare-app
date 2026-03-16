@@ -281,6 +281,54 @@ async function requestRide() {
   }
 }
 
+// ─── ADMIN ROUTES ─────────────────────────────────────────────
+
+// Admin middleware
+function adminMiddleware(req, res, next) {
+  const adminKey = req.headers['x-admin-key'];
+  if (adminKey !== process.env.ADMIN_KEY) {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+  next();
+}
+
+// Get all stats
+app.get('/admin/stats', adminMiddleware, async (req, res) => {
+  const { data: users } = await supabase
+    .from('users')
+    .select('id, name, email, role, created_at');
+
+  const { data: rides } = await supabase
+    .from('rides')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  const totalRides = rides?.length || 0;
+  const totalUsers = users?.length || 0;
+  const passengers = users?.filter(u => u.role === 'passenger').length || 0;
+  const drivers = users?.filter(u => u.role === 'driver').length || 0;
+  const matchedRides = rides?.filter(r => r.status === 'matched').length || 0;
+  const totalRevenue = rides?.reduce((sum, r) => sum + (r.estimated_fare || 0), 0) || 0;
+
+  res.json({
+    success: true,
+    stats: { totalUsers, totalRides, passengers, drivers, matchedRides, totalRevenue },
+    users: users || [],
+    rides: rides || []
+  });
+});
+
+// Delete user
+app.delete('/admin/user/:id', adminMiddleware, async (req, res) => {
+  await supabase.from('users').delete().eq('id', req.params.id);
+  res.json({ success: true, message: 'User deleted' });
+});
+
+// Delete ride
+app.delete('/admin/ride/:id', adminMiddleware, async (req, res) => {
+  await supabase.from('rides').delete().eq('id', req.params.id);
+  res.json({ success: true, message: 'Ride deleted' });
+});
 // ─── SOCKET.IO ───────────────────────────────────────────────────
 const socket = io('https://rideshare-backend-e3ka.onrender.com', {
   transports: ['polling', 'websocket'],
