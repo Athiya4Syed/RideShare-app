@@ -53,14 +53,14 @@ app.use(helmet({
 
 // Rate limiting - prevent abuse
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // max 100 requests per 15 mins
+  windowMs: 15 * 60 * 1000,
+  max: 200, // max 100 requests per 15 mins
   message: { error: '⚠️ Too many requests! Please try again later.' }
 });
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10, // max 10 login attempts per 15 mins
+  max: 50, // max 10 login attempts per 15 mins
   message: { error: '⚠️ Too many login attempts! Try again in 15 minutes.' }
 });
 
@@ -70,7 +70,7 @@ const rideLimiter = rateLimit({
   message: { error: '⚠️ Too many ride requests! Please wait.' }
 });
 
-app.use('/api', limiter);
+app.use('/const liapi', limiter);
 app.use('/auth/login', authLimiter);
 app.use('/auth/signup', authLimiter);
 app.use('/ride/request', rideLimiter);
