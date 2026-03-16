@@ -45,13 +45,10 @@ app.use(express.json());
 // ─── SECURITY ─────────────────────────────────────────────────
 
 // Helmet - sets secure HTTP headers
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false
-}));
+
 
 // Rate limiting - prevent abuse
-const limiter = rateLimit({
+/*const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 200, // max 100 requests per 15 mins
   message: { error: '⚠️ Too many requests! Please try again later.' }
@@ -72,7 +69,7 @@ const rideLimiter = rateLimit({
 app.use('/const liapi', limiter);
 app.use('/auth/login', authLimiter);
 app.use('/auth/signup', authLimiter);
-app.use('/ride/request', rideLimiter);
+app.use('/ride/request', rideLimiter);*/
 
 // ─── SUPABASE CLIENT ─────────────────────────────────────────────
 const supabase = createClient(
