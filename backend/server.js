@@ -70,10 +70,9 @@ const rideLimiter = rateLimit({
   message: { error: '⚠️ Too many ride requests! Please wait.' }
 });
 
-app.use('/const liapi', limiter);
+// Only limit auth routes
 app.use('/auth/login', authLimiter);
 app.use('/auth/signup', authLimiter);
-app.use('/ride/request', rideLimiter);
 
 // ─── SUPABASE CLIENT ─────────────────────────────────────────────
 const supabase = createClient(
