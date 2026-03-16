@@ -722,7 +722,7 @@ function addAIMessage(text, type, id = null) {
 })();
 
 // ─── PUSH NOTIFICATIONS ──────────────────────────────────────
-const VAPID_PUBLIC_KEY = 'YOUR_VAPID_PUBLIC_KEY_HERE';
+const VAPID_PUBLIC_KEY = 'BBU2EB4lxWY2dvNqsMY7aP3QWkT-q4ImP73nTnMyxLhS2-QoK5PWFpnKonOfht7s0KhLMglWowWOyPbFLRNd9b4';
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
