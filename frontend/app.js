@@ -23,10 +23,26 @@ const locationCache = new Map();
 const token = localStorage.getItem('token');
 const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
 
-// Redirect to login if not logged in
 if (!token || !currentUser) {
   window.location.href = 'auth.html';
 }
+
+// Show user info immediately
+document.addEventListener('DOMContentLoaded', () => {
+  if (currentUser) {
+    const greeting = document.getElementById('user-greeting');
+    const badge = document.getElementById('user-role-badge');
+    const nameInput = document.getElementById('name');
+    if (greeting) greeting.textContent = `👤 ${currentUser.name}`;
+    if (badge) badge.textContent = currentUser.role === 'driver' ? '🧭 Driver' : '🧍 Passenger';
+    if (nameInput) nameInput.value = currentUser.name;
+    if (currentUser.role === 'passenger') {
+      const driverTab = document.querySelector('.tab:nth-child(3)');
+      if (driverTab) driverTab.style.display = 'none';
+    }
+  }
+  initMap();
+});
 
 // ─── LOGOUT ──────────────────────────────────────────────────────
 function logout() {
