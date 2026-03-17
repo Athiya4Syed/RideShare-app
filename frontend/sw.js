@@ -6,7 +6,7 @@ const ASSETS = [
   '/auth.js',
   '/style.css',
   '/auth.css',
-  '/manifest.json',
+  
 ];
 
 self.addEventListener('install', (e) => {
