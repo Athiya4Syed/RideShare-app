@@ -28,6 +28,31 @@
     <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
     <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
   </div>
+  
+  <!-- Phone number field -->
+<div id="phone-section">
+  <div class="input-group">
+    <span class="input-icon">📱</span>
+    <input type="tel" id="signup-phone" placeholder="Phone number (+91XXXXXXXXXX)" />
+  </div>
+  <button type="button" onclick="sendOTP()" id="send-otp-btn" class="otp-btn">
+    📲 Send OTP
+  </button>
+</div>
+
+<!-- OTP field -->
+<div id="otp-section" style="display:none">
+  <div class="input-group">
+    <span class="input-icon">🔢</span>
+    <input type="number" id="otp-input" placeholder="Enter 6-digit OTP" maxlength="6"/>
+  </div>
+  <button type="button" onclick="verifyOTP()" id="verify-otp-btn" class="otp-btn">
+    ✅ Verify OTP
+  </button>
+  <p id="otp-timer" style="color:#aaa;font-size:0.78rem;margin-top:4px;">⏳ OTP valid for 5 minutes</p>
+</div>
+
+<div id="otp-status"></div>
 
   <!-- LOGIN FORM -->
   <div id="login-form" class="auth-form active">

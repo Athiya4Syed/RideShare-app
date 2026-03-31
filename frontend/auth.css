@@ -120,3 +120,30 @@ body {
   .auth-container { padding:28px 20px; border-radius:18px; }
   .logo h1 { font-size:1.8rem; }
 }
+
+/* OTP Styles */
+.otp-btn {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid #00d4ff;
+  color: #00d4ff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  margin-top: 6px;
+  transition: all 0.2s;
+}
+
+.otp-btn:hover { background: #00d4ff22; }
+
+.otp-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#otp-status {
+  font-size: 0.82rem;
+  min-height: 20px;
+  margin-top: 4px;
+}

@@ -9,6 +9,9 @@ const Anthropic = require('@anthropic-ai/sdk');
 const webpush = require('web-push');
 require('dotenv').config();
 
+const twilio = require('twilio');
+const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+
 const app = express();
 const server = http.createServer(app);
 
@@ -290,6 +293,57 @@ app.delete('/admin/user/:id', adminMiddleware, async (req, res) => {
 app.delete('/admin/ride/:id', adminMiddleware, async (req, res) => {
   await supabase.from('rides').delete().eq('id', req.params.id);
   res.json({ success: true, message: 'Ride deleted' });
+});
+
+// ─── OTP VERIFICATION ─────────────────────────────────────────
+const otpStore = new Map(); // Store OTPs temporarily
+
+// Send OTP
+app.post('/auth/send-otp', async (req, res) => {
+  const { phone } = req.body;
+  if (!phone) return res.status(400).json({ error: 'Phone number required' });
+
+  // Generate 6 digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  
+  // Store OTP with expiry (5 minutes)
+  otpStore.set(phone, {
+    otp,
+    expiry: Date.now() + 5 * 60 * 1000
+  });
+
+  try {
+    await twilioClient.messages.create({
+      body: `Your RideShare OTP is: ${otp}. Valid for 5 minutes.`,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: phone
+    });
+
+    console.log(`✅ OTP sent to ${phone}`);
+    res.json({ success: true, message: '✅ OTP sent successfully!' });
+
+  } catch (err) {
+    console.error('Twilio error:', err);
+    res.status(500).json({ error: 'Failed to send OTP. Check phone number!' });
+  }
+});
+
+// Verify OTP
+app.post('/auth/verify-otp', (req, res) => {
+  const { phone, otp } = req.body;
+  if (!phone || !otp) return res.status(400).json({ error: 'Phone and OTP required' });
+
+  const stored = otpStore.get(phone);
+
+  if (!stored) return res.status(400).json({ error: 'OTP not found. Request a new one!' });
+  if (Date.now() > stored.expiry) {
+    otpStore.delete(phone);
+    return res.status(400).json({ error: 'OTP expired. Request a new one!' });
+  }
+  if (stored.otp !== otp) return res.status(400).json({ error: 'Wrong OTP!' });
+
+  otpStore.delete(phone);
+  res.json({ success: true, message: '✅ Phone verified!' });
 });
 
 // ─── SOCKET.IO ────────────────────────────────────────────────
