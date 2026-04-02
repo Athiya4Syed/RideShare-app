@@ -507,6 +507,7 @@ main { display:flex; height:calc(100vh - 70px); }
   #route-info {
   position:absolute; bottom:0; left:0; right:0;
   margin-bottom: 0;
+  }
 
   .match-details { flex-direction:column; }
   .match-person { min-width:unset; width:100%; }
@@ -546,6 +547,8 @@ main { display:flex; height:calc(100vh - 70px); }
   width:0 !important;
   height:0 !important;
   overflow:hidden !important;
+  color: #000 !important;
+  background-color: white !important;
 }
 /* PWA Install Button */
 @keyframes pulse {
@@ -660,5 +663,4 @@ main { display:flex; height:calc(100vh - 70px); }
   color: white !important;
   cursor: pointer !important;
   font-weight: bold !important;
-}
 }
