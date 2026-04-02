@@ -20,13 +20,12 @@ function selectRole(role) {
 
 // ─── SIGNUP ──────────────────────────────────────────────────────
 
-// Add this at the beginning of signup function
-if (!otpVerified) {
-  showError('signup-error', '⚠️ Please verify your phone number first!');
-  return;
-}
 
 async function signup() {
+  if (!otpVerified) {
+  showError('signup-error', '⚠️ Please verify your phone number first!');
+  return;
+  }
   const name     = document.getElementById('signup-name').value.trim();
   const email    = document.getElementById('signup-email').value.trim();
   const phone    = document.getElementById('signup-phone').value.trim();
