@@ -152,7 +152,7 @@ main { display:flex; height:calc(100vh - 70px); }
   width:360px; background:var(--bg2);
   display:flex; flex-direction:column;
   border-left:2px solid var(--border);
-  overflow:hidden;
+  overflow-y:auto;
   transition:width 0.3s;
 }
 
@@ -521,7 +521,9 @@ main { display:flex; height:calc(100vh - 70px); }
 .success { color:var(--success); }
 .error { color:var(--danger); }
 .leaflet-container { background:var(--bg3) !important; }
-.leaflet-routing-container { display:none !important; }
+.leaflet-routing-container,
+.leaflet-routing-alternatives-container,
+.leaflet-bar { display:none !important; }
 
 /* PWA Install Button */
 @keyframes pulse {
