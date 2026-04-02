@@ -551,19 +551,25 @@ main { display:flex; height:calc(100vh - 70px); }
   background-color: white !important;
 }
 
-.leaflet-top.leaflet-right,
+.leaflet-top.leaflet-right {
+  width: auto !important;
+  height: auto !important;
+  pointer-events: auto !important;
+}
 
-.leaflet-routing-container,
-.leaflet-routing-container *,
-.leaflet-routing-alternatives-container,
-.leaflet-routing-alternatives-container *,
-.leaflet-routing-alt,
-.leaflet-routing-alt *,
-.leaflet-routing-alt h2,
-.leaflet-routing-alt h3,
-.leaflet-routing-alt td {
-  color: #000 !important;
-  background-color: #fff !important;
+.leaflet-routing-container {
+  width: 320px !important;
+  max-height: 200px !important;
+  overflow-y: auto !important;
+  background: white !important;
+  color: black !important;
+  border-radius: 8px !important;
+  padding: 8px !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
+}
+
+.leaflet-routing-alternatives-container {
+  display: none !important;
 }
 
 /* PWA Install Button */
