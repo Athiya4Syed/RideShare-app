@@ -183,48 +183,37 @@ function drawRoute() {
     
     ;
 
+  routingControl = L.Routing.control({
+    waypoints: [L.latLng(pickupLatLng), L.latLng(destinationLatLng)],
+    routeWhileDragging: false, addWaypoints: false,
+    draggableWaypoints: false, fitSelectedRoutes: true,
+    show: true,
+    collapsible: false,
+    showAlternatives: false,
+    lineOptions: { styles: [{ color:'#00d4ff', weight:5, opacity:0.9 }] },
+    createMarker: () => null
+  }).addTo(map);
 
-routingControl.on('routesfound', function(e) {
-  // ── Route info bar ──────────────────────────────
-  const route = e.routes[0];
-  currentDistanceKm = (route.summary.totalDistance / 1000);
-  const mins = Math.round(route.summary.totalTime / 60);
-  document.getElementById('route-distance').textContent = `📏 ${currentDistanceKm.toFixed(1)} km`;
-  document.getElementById('route-duration').textContent = `⏱️ ${mins} mins`;
-  document.getElementById('route-info').style.display = 'flex';
-
-  // ── Fix routing panel text color ────────────────
-  setTimeout(() => {
-    const panel = document.querySelector('.leaflet-top.leaflet-right');
-    const container = document.querySelector('.leaflet-routing-container');
-    if (panel) {
-      panel.style.setProperty('width', '320px', 'important');
-      panel.style.setProperty('height', 'auto', 'important');
-      panel.style.setProperty('pointer-events', 'auto', 'important');
-    }
-    if (container) {
-      container.style.setProperty('background', 'white', 'important');
-      container.style.setProperty('color', 'black', 'important');
-      container.style.setProperty('width', '320px', 'important');
-      container.style.setProperty('max-height', '220px', 'important');
-      container.style.setProperty('overflow-y', 'auto', 'important');
-      container.style.setProperty('border-radius', '8px', 'important');
-      container.style.setProperty('padding', '8px', 'important');
-      container.style.setProperty('font-size', '0.78rem', 'important');
-      container.style.setProperty('box-shadow', '0 2px 10px rgba(0,0,0,0.3)', 'important');
-      container.querySelectorAll('*').forEach(el => {
-        el.style.setProperty('color', 'black', 'important');
-        el.style.setProperty('background-color', 'transparent', 'important');
-      });
-    }
-  }, 300);
-});
+  routingControl.on('routesfound', function() {
+  const container = document.querySelector('.leaflet-routing-container');
+  if (container) {
+    container.style.cssText = `
+      background: white !important;
+      color: black !important;
+      width: 320px !important;
+      max-height: 200px !important;
+      overflow-y: auto !important;
+      border-radius: 8px !important;
+      padding: 8px !important;
+      font-size: 0.78rem !important;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
+    `;
     container.querySelectorAll('*').forEach(el => {
       el.style.color = 'black';
       el.style.backgroundColor = 'transparent';
     });
   }
-
+});
 
   routingControl.on('routesfound', e => {
     const route = e.routes[0];
@@ -237,7 +226,7 @@ routingControl.on('routesfound', function(e) {
 
     updateFareEstimate();
   });
-
+}
 
 // ─── FARE ESTIMATE ───────────────────────────────────────────────
 function updateFareEstimate() {
