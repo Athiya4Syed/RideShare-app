@@ -182,12 +182,12 @@ function drawRoute() {
   if (routingControl) map.removeControl(routingControl)
     
     ;
-q
+
   routingControl = L.Routing.control({
     waypoints: [L.latLng(pickupLatLng), L.latLng(destinationLatLng)],
     routeWhileDragging: false, addWaypoints: false,
     draggableWaypoints: false, fitSelectedRoutes: true,
-    show: false,
+    show: true,
     collapsible: false,
     showAlternatives: false,
     lineOptions: { styles: [{ color:'#00d4ff', weight:5, opacity:0.9 }] },
