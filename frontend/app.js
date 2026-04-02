@@ -179,9 +179,7 @@ function placeMarker(type, latlng, label) {
 // ─── DRAW ROUTE ──────────────────────────────────────────────────
 function drawRoute() {
   if (!pickupLatLng || !destinationLatLng) return;
-  if (routingControl) map.removeControl(routingControl)
-    
-    ;
+  if (routingControl) map.removeControl(routingControl);
 
   routingControl = L.Routing.control({
     waypoints: [L.latLng(pickupLatLng), L.latLng(destinationLatLng)],
@@ -194,37 +192,67 @@ function drawRoute() {
     createMarker: () => null
   }).addTo(map);
 
-  routingControl.on('routesfound', function() {
-  const container = document.querySelector('.leaflet-routing-container');
-  if (container) {
-    container.style.cssText = `
-      background: white !important;
-      color: black !important;
-      width: 320px !important;
-      max-height: 200px !important;
-      overflow-y: auto !important;
-      border-radius: 8px !important;
-      padding: 8px !important;
-      font-size: 0.78rem !important;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
-    `;
-    container.querySelectorAll('*').forEach(el => {
-      el.style.color = 'black';
-      el.style.backgroundColor = 'transparent';
-    });
-  }
-});
-
-  routingControl.on('routesfound', e => {
+  routingControl.on('routesfound', function(e) {
     const route = e.routes[0];
     currentDistanceKm = (route.summary.totalDistance / 1000);
     const mins = Math.round(route.summary.totalTime / 60);
 
+    // ── Route info bar ───────────────────────────────────────
     document.getElementById('route-distance').textContent = `📏 ${currentDistanceKm.toFixed(1)} km`;
     document.getElementById('route-duration').textContent = `⏱️ ${mins} mins`;
     document.getElementById('route-info').style.display = 'flex';
-
     updateFareEstimate();
+
+    // ── Build custom route panel ─────────────────────────────
+    setTimeout(() => {
+      // Hide Leaflet's default broken panel
+      const lrmPanel = document.querySelector('.leaflet-top.leaflet-right');
+      if (lrmPanel) lrmPanel.style.display = 'none';
+
+      // Remove any old custom panel
+      const old = document.getElementById('custom-route-panel');
+      if (old) old.remove();
+
+      // Build fresh panel with inline styles (immune to CSS reset)
+      const steps = route.instructions || [];
+      const stepsHTML = steps.slice(0, 12).map(s =>
+        `
+${s.text}
+${s.distance > 0 ? (s.distance/1000).toFixed(1)+' km' : ''}
+`
+      ).join('');
+
+      const panel = document.createElement('div');
+      panel.id = 'custom-route-panel';
+      panel.innerHTML = `
+        
+
+          🗺️ ${currentDistanceKm.toFixed(1)} km  ·  ${mins} mins
+        
+
+        
+${stepsHTML}
+
+      `;
+      Object.assign(panel.style, {
+        position:   'absolute',
+        top:        '10px',
+        right:      '10px',
+        zIndex:     '1000',
+        background: '#ffffff',
+        color:      '#000000',
+        borderRadius: '8px',
+        padding:    '10px 12px',
+        width:      '280px',
+        boxShadow:  '0 2px 10px rgba(0,0,0,0.3)',
+        fontFamily: 'Segoe UI, sans-serif',
+        fontSize:   '0.78rem',
+        boxSizing:  'border-box',
+        lineHeight: '1.5'
+      });
+
+      document.getElementById('map-container').appendChild(panel);
+    }, 500);
   });
 }
 
