@@ -203,52 +203,67 @@ function drawRoute() {
     document.getElementById('route-info').style.display = 'flex';
     updateFareEstimate();
 
-    // ── Build custom route panel ─────────────────────────────
+    // ── Build custom turn-by-turn panel ──────────────────────
     setTimeout(() => {
-      // Hide Leaflet's default broken panel
+      // Hide Leaflet's default panel
       const lrmPanel = document.querySelector('.leaflet-top.leaflet-right');
       if (lrmPanel) lrmPanel.style.display = 'none';
 
-      // Remove any old custom panel
+      // Remove old custom panel if exists
       const old = document.getElementById('custom-route-panel');
       if (old) old.remove();
 
-      // Build fresh panel with inline styles (immune to CSS reset)
-      const steps = route.instructions || [];
-      const stepsHTML = steps.slice(0, 12).map(s =>
-        `
-${s.text}
-${s.distance > 0 ? (s.distance/1000).toFixed(1)+' km' : ''}
-`
-      ).join('');
+      // Build step icons map
+      const icons = {
+        'Straight': '⬆️', 'SlightRight': '↗️', 'SlightLeft': '↖️',
+        'Right': '➡️', 'Left': '⬅️', 'SharpRight': '↪️',
+        'SharpLeft': '↩️', 'Roundabout': '🔄',
+        'DestinationReached': '🏁', 'WaypointReached': '📍',
+        'StartAt': '🟢'
+      };
 
+      const steps = route.instructions || [];
+      const stepsHTML = steps.map(s => {
+        const icon = icons[s.type] || '➡️';
+        const dist = s.distance > 0
+          ? `${s.distance >= 1000 ? (s.distance/1000).toFixed(1)+' km' : s.distance+' m'}`
+          : '';
+        return `
+${icon}
+${s.text}
+
+          ${dist}
+        
+`;
+      }).join('');
+
+      // Create panel element
       const panel = document.createElement('div');
       panel.id = 'custom-route-panel';
       panel.innerHTML = `
         
-
-          🗺️ ${currentDistanceKm.toFixed(1)} km  ·  ${mins} mins
-        
+🗺️ Turn-by-turn
+${currentDistanceKm.toFixed(1)} km · ${mins} mins
 
         
 ${stepsHTML}
 
       `;
       Object.assign(panel.style, {
-        position:   'absolute',
-        top:        '10px',
-        right:      '10px',
-        zIndex:     '1000',
-        background: '#ffffff',
-        color:      '#000000',
+        position:     'absolute',
+        top:          '10px',
+        right:        '10px',
+        zIndex:       '1000',
+        background:   '#ffffff',
+        color:        '#000000',
         borderRadius: '8px',
-        padding:    '10px 12px',
-        width:      '280px',
-        boxShadow:  '0 2px 10px rgba(0,0,0,0.3)',
-        fontFamily: 'Segoe UI, sans-serif',
-        fontSize:   '0.78rem',
-        boxSizing:  'border-box',
-        lineHeight: '1.5'
+        padding:      '10px 12px',
+        width:        '280px',
+        boxShadow:    '0 2px 10px rgba(0,0,0,0.3)',
+        fontFamily:   'Segoe UI, sans-serif',
+        fontSize:     '0.78rem',
+        boxSizing:    'border-box',
+        lineHeight:   '1.5'
       });
 
       document.getElementById('map-container').appendChild(panel);
