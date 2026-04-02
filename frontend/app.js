@@ -194,6 +194,27 @@ function drawRoute() {
     createMarker: () => null
   }).addTo(map);
 
+  routingControl.on('routesfound', function() {
+  const container = document.querySelector('.leaflet-routing-container');
+  if (container) {
+    container.style.cssText = `
+      background: white !important;
+      color: black !important;
+      width: 320px !important;
+      max-height: 200px !important;
+      overflow-y: auto !important;
+      border-radius: 8px !important;
+      padding: 8px !important;
+      font-size: 0.78rem !important;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
+    `;
+    container.querySelectorAll('*').forEach(el => {
+      el.style.color = 'black';
+      el.style.backgroundColor = 'transparent';
+    });
+  }
+});
+
   routingControl.on('routesfound', e => {
     const route = e.routes[0];
     currentDistanceKm = (route.summary.totalDistance / 1000);
