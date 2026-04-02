@@ -179,12 +179,17 @@ function placeMarker(type, latlng, label) {
 // ─── DRAW ROUTE ──────────────────────────────────────────────────
 function drawRoute() {
   if (!pickupLatLng || !destinationLatLng) return;
-  if (routingControl) map.removeControl(routingControl);
-
+  if (routingControl) map.removeControl(routingControl)
+    
+    ;
+q
   routingControl = L.Routing.control({
     waypoints: [L.latLng(pickupLatLng), L.latLng(destinationLatLng)],
     routeWhileDragging: false, addWaypoints: false,
     draggableWaypoints: false, fitSelectedRoutes: true,
+    show: false,
+    collapsible: false,
+    showAlternatives: false,
     lineOptions: { styles: [{ color:'#00d4ff', weight:5, opacity:0.9 }] },
     createMarker: () => null
   }).addTo(map);

@@ -522,9 +522,17 @@ main { display:flex; height:calc(100vh - 70px); }
 .error { color:var(--danger); }
 .leaflet-container { background:var(--bg3) !important; }
 .leaflet-routing-container,
+.leaflet-routing-container *,
 .leaflet-routing-alternatives-container,
-.leaflet-bar { display:none !important; }
-
+.leaflet-routing-alternatives-container *,
+.leaflet-routing-collapse-btn { 
+  display:none !important; 
+  visibility:hidden !important;
+  opacity:0 !important;
+  width:0 !important;
+  height:0 !important;
+  overflow:hidden !important;
+}
 /* PWA Install Button */
 @keyframes pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(0,255,136,0.4); }
