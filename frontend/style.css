@@ -519,21 +519,27 @@ main { display:flex; height:calc(100vh - 70px); }
 }
 
 /* ─── UTILITIES ──────────────────────────────────────────────── */
+.success { color:var(--success); }
+.error { color:var(--danger); }
+.leaflet-container { background:var(--bg3) !important; }
+
 /* ─── LEAFLET ROUTING PANEL ──────────────────────────────────── */
 .leaflet-top.leaflet-right {
   width: auto !important;
   height: auto !important;
-  min-width: 200px !important;
+  min-width: 280px !important;
   pointer-events: auto !important;
   margin: 10px !important;
   padding: 0 !important;
+  display: block !important;
 }
 
 .leaflet-routing-container {
-  width: 300px !important;
-  min-height: 60px !important;
-  max-height: 220px !important;
+  display: block !important;
+  width: 280px !important;
+  min-height: 80px !important;
   height: auto !important;
+  max-height: 220px !important;
   overflow-y: auto !important;
   background: #ffffff !important;
   color: #000000 !important;
@@ -544,125 +550,54 @@ main { display:flex; height:calc(100vh - 70px); }
   margin: 0 !important;
 }
 
-.leaflet-routing-container h2,
-.leaflet-routing-container h3,
-.leaflet-routing-container p,
-.leaflet-routing-container td,
-.leaflet-routing-container th,
-.leaflet-routing-container span,
-.leaflet-routing-container a,
-.leaflet-routing-container div {
-  color: #000000 !important;
-  background: transparent !important;
-  margin: 2px 0 !important;
-  padding: 2px 0 !important;
-}
- 
 .leaflet-routing-alt {
   display: block !important;
+  width: 100% !important;
   height: auto !important;
   min-height: 40px !important;
-  width: 100% !important;
   color: #000000 !important;
+  background: #ffffff !important;
 }
 
-.leaflet-routing-alt h2 {
-  display: block !important;
-  font-size: 0.85rem !important;
-  font-weight: bold !important;
-  color: #000000 !important;
-  margin: 4px 0 !important;
-  padding: 4px 0 !important;
-  min-height: 20px !important;
-  line-height: 1.4 !important;
-}
-
+.leaflet-routing-alt h2,
 .leaflet-routing-alt h3 {
   display: block !important;
-  font-size: 0.78rem !important;
   color: #000000 !important;
-  margin: 4px 0 !important;
+  background: #ffffff !important;
+  font-size: 0.82rem !important;
+  line-height: 1.5 !important;
+  min-height: 18px !important;
+  margin: 3px 0 !important;
   padding: 2px 0 !important;
-  min-height: 16px !important;
-  line-height: 1.4 !important;
 }
 
 .leaflet-routing-alt table {
   display: table !important;
   width: 100% !important;
-  color: #000000 !important;
+  background: #ffffff !important;
 }
 
 .leaflet-routing-alt tr {
   display: table-row !important;
-  min-height: 20px !important;
 }
 
 .leaflet-routing-alt td {
   display: table-cell !important;
   color: #000000 !important;
+  background: transparent !important;
   padding: 2px 4px !important;
-  min-height: 16px !important;
-  line-height: 1.4 !important;
-}
-
-.leaflet-routing-alternatives-container {
-  display: none !important;
-}
-.success { color:var(--success); }
-.error { color:var(--danger); }
-.leaflet-container { background:var(--bg3) !important; }
-.leaflet-routing-container {
-  background: #fff !important;
-  border-radius: 8px !important;
-  padding: 8px !important;
-  font-size: 0.78rem !important;
-  max-height: 200px !important;
-  overflow-y: auto !important;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
-  color: #000 !important;
-}
-
-.leaflet-routing-container * {
-  color: black !important;
-}
-.leaflet-routing-alternatives-container {
-  display: none !important;
-}
-.leaflet-routing-alternatives-container *,
-.leaflet-routing-collapse-btn { 
-  display:none !important; 
-  visibility:hidden !important;
-  opacity:0 !important;
-  width:0 !important;
-  height:0 !important;
-  overflow:hidden !important;
-  color: #000 !important;
-  background-color: white !important;
-}
-
-.leaflet-top.leaflet-right {
-  width: auto !important;
-  height: auto !important;
-  pointer-events: auto !important;
-}
-
-.leaflet-routing-container {
-  width: 320px !important;
-  max-height: 200px !important;
-  overflow-y: auto !important;
-  background: white !important;
-  color: black !important;
-  border-radius: 8px !important;
-  padding: 8px !important;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
+  line-height: 1.5 !important;
 }
 
 .leaflet-routing-alternatives-container {
   display: none !important;
 }
 
-/* PWA Install Button */
+.leaflet-routing-collapse-btn {
+  display: none !important;
+}
+
+/* ─── PWA PULSE ───────────────────────────────────────────────── */
 @keyframes pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(0,255,136,0.4); }
   50% { box-shadow: 0 0 0 8px rgba(0,255,136,0); }
