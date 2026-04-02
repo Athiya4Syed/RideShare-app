@@ -175,10 +175,10 @@ main { display:flex; height:calc(100vh - 70px); }
 
 .tab-content {
   display:none; flex-direction:column;
-  gap:11px; padding:16px 14px;
+  gap:11px; padding:16px 14px 80px 14px;
   overflow-y:scroll;
   flex:1;
-  max-height: calc(100vh - 140px);
+  max-height: calc(100vh - 70px);
   scroll-behavior: smooth;
 }
 .tab-content.active { display:flex; }
@@ -504,7 +504,9 @@ main { display:flex; height:calc(100vh - 70px); }
 
   .ride-types { grid-template-columns:1fr 1fr; }
 
-  #route-info { gap:12px; font-size:0.8rem; padding:8px 12px; }
+  #route-info {
+  position:absolute; bottom:0; left:0; right:0;
+  margin-bottom: 0;
 
   .match-details { flex-direction:column; }
   .match-person { min-width:unset; width:100%; }
