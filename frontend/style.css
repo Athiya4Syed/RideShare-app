@@ -551,10 +551,6 @@ main { display:flex; height:calc(100vh - 70px); }
   background-color: white !important;
 }
 
-.leaflet-top.leaflet-right {
-  display: none !important;
-}
-
 .leaflet-routing-container,
 .leaflet-routing-container *,
 .leaflet-routing-alternatives-container,
@@ -563,8 +559,7 @@ main { display:flex; height:calc(100vh - 70px); }
 .leaflet-routing-alt *,
 .leaflet-routing-alt h2,
 .leaflet-routing-alt h3,
-.leaflet-routing-alt td,
-.leaflet-bar {
+.leaflet-routing-alt td {
   color: #000 !important;
   background-color: #fff !important;
 }
