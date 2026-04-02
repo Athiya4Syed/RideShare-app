@@ -550,6 +550,25 @@ main { display:flex; height:calc(100vh - 70px); }
   color: #000 !important;
   background-color: white !important;
 }
+
+.leaflet-top.leaflet-right {
+  display: none !important;
+}
+
+.leaflet-routing-container,
+.leaflet-routing-container *,
+.leaflet-routing-alternatives-container,
+.leaflet-routing-alternatives-container *,
+.leaflet-routing-alt,
+.leaflet-routing-alt *,
+.leaflet-routing-alt h2,
+.leaflet-routing-alt h3,
+.leaflet-routing-alt td,
+.leaflet-bar {
+  color: #000 !important;
+  background-color: #fff !important;
+}
+
 /* PWA Install Button */
 @keyframes pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(0,255,136,0.4); }
