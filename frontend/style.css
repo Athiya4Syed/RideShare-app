@@ -711,3 +711,26 @@ main { display:flex; height:calc(100vh - 70px); }
   cursor: pointer !important;
   font-weight: bold !important;
 }
+
+/* ─── ROUTING ICONS FIX ──────────────────────────────────────── */
+.leaflet-routing-alt td img {
+  filter: grayscale(100%) brightness(0) !important;
+  width: 18px !important;
+  height: 18px !important;
+}
+
+.leaflet-routing-alt tr {
+  border-bottom: 1px solid #eee !important;
+  padding: 4px 0 !important;
+}
+
+.leaflet-routing-alt td:first-child {
+  width: 24px !important;
+  text-align: center !important;
+}
+
+.leaflet-routing-alt td:last-child {
+  text-align: right !important;
+  color: #555 !important;
+  font-size: 0.72rem !important;
+}
