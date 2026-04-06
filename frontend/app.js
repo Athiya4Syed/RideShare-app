@@ -1,5 +1,5 @@
 //routingControl.on('routesfound', function(e));
-console.log('✅ Route found!', e.routes[0].instructions.length, 'steps');
+//console.log('✅ Route found!', e.routes[0].instructions.length, 'steps');
   // ... rest of code
 
 const BACKEND = window.location.hostname === 'localhost'
