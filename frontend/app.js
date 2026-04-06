@@ -181,10 +181,16 @@ function drawRoute() {
   if (!pickupLatLng || !destinationLatLng) return;
   if (routingControl) map.removeControl(routingControl);
 
+  // Remove old custom panel
+  const old = document.getElementById('custom-route-panel');
+  if (old) old.remove();
+
   routingControl = L.Routing.control({
     waypoints: [L.latLng(pickupLatLng), L.latLng(destinationLatLng)],
-    routeWhileDragging: false, addWaypoints: false,
-    draggableWaypoints: false, fitSelectedRoutes: true,
+    routeWhileDragging: false,
+    addWaypoints: false,
+    draggableWaypoints: false,
+    fitSelectedRoutes: true,
     show: false,
     collapsible: false,
     showAlternatives: false,
@@ -197,23 +203,21 @@ function drawRoute() {
     currentDistanceKm = (route.summary.totalDistance / 1000);
     const mins = Math.round(route.summary.totalTime / 60);
 
-    // ── Route info bar ───────────────────────────────────────
     document.getElementById('route-distance').textContent = `📏 ${currentDistanceKm.toFixed(1)} km`;
     document.getElementById('route-duration').textContent = `⏱️ ${mins} mins`;
     document.getElementById('route-info').style.display = 'flex';
     updateFareEstimate();
 
-    // ── Build custom turn-by-turn panel ──────────────────────
+    // Hide Leaflet default panel
     setTimeout(() => {
-      // Hide Leaflet's default panel
       const lrmPanel = document.querySelector('.leaflet-top.leaflet-right');
       if (lrmPanel) lrmPanel.style.display = 'none';
 
-      // Remove old custom panel if exists
-      const old = document.getElementById('custom-route-panel');
-      if (old) old.remove();
+      // Remove old panel
+      const oldPanel = document.getElementById('custom-route-panel');
+      if (oldPanel) oldPanel.remove();
 
-      // Build step icons map
+      // Step icons
       const icons = {
         'Straight': '⬆️', 'SlightRight': '↗️', 'SlightLeft': '↖️',
         'Right': '➡️', 'Left': '⬅️', 'SharpRight': '↪️',
@@ -223,84 +227,55 @@ function drawRoute() {
       };
 
       const steps = route.instructions || [];
-      const stepsHTML = steps.map(s => {
+
+      // Build steps HTML
+      let stepsHTML = '';
+      steps.forEach(s => {
         const icon = icons[s.type] || '➡️';
         const dist = s.distance > 0
-          ? `${s.distance >= 1000 ? (s.distance/1000).toFixed(1)+' km' : s.distance+' m'}`
+          ? (s.distance >= 1000
+              ? (s.distance / 1000).toFixed(1) + ' km'
+              : Math.round(s.distance) + ' m')
           : '';
-        return `
-${icon}
-${s.text}
 
-          ${dist}
-        
-`;
-      }).join('');
-
-      // Create panel element
-      const panel = document.createElement('div');
-      panel.id = 'custom-route-panel';
-      panel.innerHTML = `
-        
-🗺️ Turn-by-turn
-${currentDistanceKm.toFixed(1)} km · ${mins} mins
-
-        
-${stepsHTML}
-
-      `;
-      Object.assign(panel.style, {
-        position:     'absolute',
-        top:          '10px',
-        right:        '10px',
-        zIndex:       '1000',
-        background:   '#ffffff',
-        color:        '#000000',
-        borderRadius: '8px',
-        padding:      '10px 12px',
-        width:        '280px',
-        boxShadow:    '0 2px 10px rgba(0,0,0,0.3)',
-        fontFamily:   'Segoe UI, sans-serif',
-        fontSize:     '0.78rem',
-        boxSizing:    'border-box',
-        lineHeight:   '1.5'
+        stepsHTML += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eee;">'
+          + '<span style="font-size:1rem;min-width:24px;text-align:center;">' + icon + '</span>'
+          + '<span style="flex:1;color:#111;font-size:0.78rem;">' + s.text + '</span>'
+          + '<span style="color:#555;font-size:0.72rem;white-space:nowrap;">' + dist + '</span>'
+          + '</div>';
       });
 
+      // Create panel
+      const panel = document.createElement('div');
+      panel.id = 'custom-route-panel';
+      panel.style.cssText = `
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1000;
+        background: #ffffff;
+        color: #000000;
+        border-radius: 8px;
+        padding: 10px 12px;
+        width: 280px;
+        max-height: 250px;
+        overflow-y: auto;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        font-family: Segoe UI, sans-serif;
+        font-size: 0.78rem;
+        box-sizing: border-box;
+      `;
+
+      panel.innerHTML = '<div style="font-weight:bold;color:#000;margin-bottom:6px;font-size:0.82rem;">'
+        + '🗺️ Turn-by-turn &nbsp;|&nbsp; '
+        + currentDistanceKm.toFixed(1) + ' km · ' + mins + ' mins'
+        + '</div>'
+        + stepsHTML;
+
       document.getElementById('map-container').appendChild(panel);
+
     }, 500);
   });
-}
-
-// ─── FARE ESTIMATE ───────────────────────────────────────────────
-function updateFareEstimate() {
-  if (!currentDistanceKm) return;
-
-  const FARE_RULES = {
-    bike:   { base:15, perKm:7  },
-    auto:   { base:25, perKm:10 },
-    solo:   { base:40, perKm:14 },
-    shared: { base:30, perKm:12 },
-  };
-
-  const rule = FARE_RULES[currentRideType];
-  const total = rule.base + currentDistanceKm * rule.perKm;
-  const isShared = currentRideType === 'shared' &&
-    document.getElementById('allow-sharing').checked;
-  const fare = Math.round(isShared ? total / 2 : total);
-  const fullFare = Math.round(total);
-
-  document.getElementById('fare-estimate-box').style.display = 'flex';
-  document.getElementById('fare-type').textContent = currentRideType.toUpperCase();
-  document.getElementById('fare-distance').textContent = `${currentDistanceKm.toFixed(1)} km`;
-  document.getElementById('fare-amount').textContent = `₹${fare}`;
-  document.getElementById('route-fare').textContent = `💰 ₹${fare}`;
-
-  if (isShared) {
-    document.getElementById('fare-saving-row').style.display = 'flex';
-    document.getElementById('fare-saving').textContent = `₹${fullFare - fare}`;
-  } else {
-    document.getElementById('fare-saving-row').style.display = 'none';
-  }
 }
 
 // ─── RESET MAP ───────────────────────────────────────────────────
