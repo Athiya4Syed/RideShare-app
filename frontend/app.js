@@ -1,13 +1,8 @@
-//routingControl.on('routesfound', function(e));
-//console.log('✅ Route found!', e.routes[0].instructions.length, 'steps');
-  // ... rest of code
-
 const BACKEND = window.location.hostname === 'localhost'
   ? 'http://localhost:3000'
   : 'https://rideshare-backend-e3ka.onrender.com';
 
 // ─── PERFORMANCE ──────────────────────────────────────────────
-// Debounce function to prevent too many API calls
 function debounce(func, wait) {
   let timeout;
   return function executedFunction(...args) {
@@ -20,7 +15,6 @@ function debounce(func, wait) {
   };
 }
 
-// Cache for location searches
 const locationCache = new Map();
 
 // ─── AUTH GUARD ──────────────────────────────────────────────────
@@ -31,7 +25,6 @@ if (!token || !currentUser) {
   window.location.href = 'auth.html';
 }
 
-// Show user info immediately
 document.addEventListener('DOMContentLoaded', () => {
   if (currentUser) {
     const greeting = document.getElementById('user-greeting');
@@ -55,8 +48,6 @@ function logout() {
   window.location.href = 'auth.html';
 }
 
-
-
 // Map state
 let map, pickupMarker, destinationMarker, routingControl, driverMarker;
 let pickupLatLng = null, destinationLatLng = null;
@@ -75,11 +66,13 @@ function initMap() {
 }
 
 // ─── TABS ────────────────────────────────────────────────────────
-function switchTab(tab) {
+// FIX 4: Pass 'el' (this) explicitly instead of relying on implicit global 'event'
+// Update your HTML to: onclick="switchTab('book', this)"
+function switchTab(tab, el) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelector(`#tab-${tab}`).classList.add('active');
-  event.target.classList.add('active');
+  if (el) el.classList.add('active');
 }
 
 // ─── RIDE TYPE SELECTOR ──────────────────────────────────────────
@@ -88,12 +81,9 @@ function selectRideType(type) {
   document.querySelectorAll('.ride-type-card').forEach(c => c.classList.remove('active'));
   document.getElementById(`type-${type}`).classList.add('active');
 
-  
- // Show/hide share toggle (shared rides AND auto can be shared)
-document.getElementById('share-toggle').style.display =
+  document.getElementById('share-toggle').style.display =
     (type === 'shared' || type === 'auto') ? 'block' : 'none';
 
-  // Update fare estimate
   if (pickupLatLng && destinationLatLng) updateFareEstimate();
 }
 
@@ -105,7 +95,6 @@ async function searchLocation(type) {
 
   if (!query) { statusEl.textContent = '⚠️ Type a location first!'; return; }
 
-  // Check cache first
   if (locationCache.has(query)) {
     const cached = locationCache.get(query);
     placeMarker(type, cached.latlng, cached.name);
@@ -138,7 +127,6 @@ async function searchLocation(type) {
     const latlng = L.latLng(parseFloat(place.lat), parseFloat(place.lon));
     const name = place.display_name.split(',').slice(0, 3).join(', ');
 
-    // Save to cache
     locationCache.set(query, { latlng, name });
 
     placeMarker(type, latlng, name);
@@ -168,13 +156,13 @@ function placeMarker(type, latlng, label) {
   if (type === 'pickup') {
     if (pickupMarker) map.removeLayer(pickupMarker);
     pickupMarker = L.circleMarker(latlng, {
-      radius:10, fillColor:'#00ff88', color:'#fff', weight:2, fillOpacity:1
+      radius: 10, fillColor: '#00ff88', color: '#fff', weight: 2, fillOpacity: 1
     }).addTo(map).bindPopup(`📍 ${label}`).openPopup();
     pickupLatLng = latlng;
   } else {
     if (destinationMarker) map.removeLayer(destinationMarker);
     destinationMarker = L.circleMarker(latlng, {
-      radius:10, fillColor:'#ff4d4d', color:'#fff', weight:2, fillOpacity:1
+      radius: 10, fillColor: '#ff4d4d', color: '#fff', weight: 2, fillOpacity: 1
     }).addTo(map).bindPopup(`🏁 ${label}`).openPopup();
     destinationLatLng = latlng;
   }
@@ -185,7 +173,6 @@ function drawRoute() {
   if (!pickupLatLng || !destinationLatLng) return;
   if (routingControl) map.removeControl(routingControl);
 
-  // Remove old custom panel
   const old = document.getElementById('custom-route-panel');
   if (old) old.remove();
 
@@ -198,7 +185,7 @@ function drawRoute() {
     show: false,
     collapsible: false,
     showAlternatives: false,
-    lineOptions: { styles: [{ color:'#00d4ff', weight:5, opacity:0.9 }] },
+    lineOptions: { styles: [{ color: '#00d4ff', weight: 5, opacity: 0.9 }] },
     createMarker: () => null
   }).addTo(map);
 
@@ -212,16 +199,13 @@ function drawRoute() {
     document.getElementById('route-info').style.display = 'flex';
     updateFareEstimate();
 
-    // Hide Leaflet default panel
     setTimeout(() => {
       const lrmPanel = document.querySelector('.leaflet-top.leaflet-right');
       if (lrmPanel) lrmPanel.style.display = 'none';
 
-      // Remove old panel
       const oldPanel = document.getElementById('custom-route-panel');
       if (oldPanel) oldPanel.remove();
 
-      // Step icons
       const icons = {
         'Straight': '⬆️', 'SlightRight': '↗️', 'SlightLeft': '↖️',
         'Right': '➡️', 'Left': '⬅️', 'SharpRight': '↪️',
@@ -232,14 +216,13 @@ function drawRoute() {
 
       const steps = route.instructions || [];
 
-      // Build steps HTML
       let stepsHTML = '';
       steps.forEach(s => {
         const icon = icons[s.type] || '➡️';
         const dist = s.distance > 0
           ? (s.distance >= 1000
-              ? (s.distance / 1000).toFixed(1) + ' km'
-              : Math.round(s.distance) + ' m')
+            ? (s.distance / 1000).toFixed(1) + ' km'
+            : Math.round(s.distance) + ' m')
           : '';
 
         stepsHTML += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eee;">'
@@ -249,7 +232,6 @@ function drawRoute() {
           + '</div>';
       });
 
-      // Create panel
       const panel = document.createElement('div');
       panel.id = 'custom-route-panel';
       panel.style.cssText = `
@@ -277,7 +259,6 @@ function drawRoute() {
         + stepsHTML;
 
       document.getElementById('map-container').appendChild(panel);
-
     }, 500);
   });
 }
@@ -291,7 +272,7 @@ function resetMap() {
   pickupLatLng = destinationLatLng = null;
   currentDistanceKm = 0;
 
-  ['pickup-search','destination-search','pickup','destination'].forEach(id => {
+  ['pickup-search', 'destination-search', 'pickup', 'destination'].forEach(id => {
     document.getElementById(id).value = '';
   });
 
@@ -320,9 +301,9 @@ async function requestRide() {
     const res = await fetch(`${BACKEND}/ride/request`, {
       method: 'POST',
       headers: {
-           'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify({
         name, pickup, destination,
         pickupLat: pickupLatLng?.lat, pickupLng: pickupLatLng?.lng,
@@ -336,9 +317,9 @@ async function requestRide() {
 
     const data = await res.json();
     if (res.ok) {
-      setButtonLoading(false);  // ✅ ADDED
-      showToast(`✅ ${currentRideType} ride booked!`);  // ✅ ADDED
-      const icon = { bike:'🏍️', auto:'🛺', solo:'🚗', shared:'🚗' }[currentRideType];
+      setButtonLoading(false);
+      showToast(`✅ ${currentRideType} ride booked!`);
+      const icon = { bike: '🏍️', auto: '🛺', solo: '🚗', shared: '🚗' }[currentRideType];
       const scheduled = scheduledTime ? `<br/><small>⏰ Scheduled: ${new Date(scheduledTime).toLocaleString()}</small>` : '';
       statusBox.innerHTML = `
         <span class="success">${icon} Ride #${data.ride.id} booked!</span>
@@ -347,18 +328,18 @@ async function requestRide() {
       `;
       document.getElementById('name').value = '';
     } else {
-      setButtonLoading(false);  // ✅ ADDED
+      setButtonLoading(false);
       statusBox.innerHTML = `<span class="error">❌ ${data.error}</span>`;
     }
   } catch (e) {
-    setButtonLoading(false);  // ADD THIS LINE
+    setButtonLoading(false);
     statusBox.innerHTML = `<span class="error">❌ Server not running!</span>`;
   }
 }
 
-
 // ─── SOCKET.IO ───────────────────────────────────────────────────
-const socket = io('https://rideshare-backend-e3ka.onrender.com', {
+// FIX 2: Use BACKEND variable instead of hardcoded prod URL
+const socket = io(BACKEND, {
   transports: ['polling', 'websocket'],
   reconnection: true,
   reconnectionAttempts: 10,
@@ -418,11 +399,10 @@ function addRideCard(ride) {
   const c = document.getElementById('rides-container');
   if (c.innerHTML === 'No rides yet...') c.innerHTML = '';
 
-  // Remove existing card if updating
   const existing = document.getElementById(`ride-${ride.id}`);
   if (existing) existing.remove();
 
-  const icon = { bike:'🏍️', auto:'🛺', solo:'🚗', shared:'🚗' }[ride.rideType] || '🚗';
+  const icon = { bike: '🏍️', auto: '🛺', solo: '🚗', shared: '🚗' }[ride.rideType] || '🚗';
   const scheduled = ride.scheduledTime
     ? `<br/>⏰ ${new Date(ride.scheduledTime).toLocaleString()}` : '';
   const matched = ride.matchedWith
@@ -508,9 +488,13 @@ function startDriverTracking() {
     navigator.geolocation.getCurrentPosition(pos => {
       const { latitude, longitude } = pos.coords;
 
+      // FIX 3: Added Authorization header to driver location fetch
       fetch(`${BACKEND}/driver/location`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ driverName, lat: latitude, lng: longitude, rideId })
       });
 
@@ -565,9 +549,13 @@ async function submitRating() {
   if (!currentDriverRating) {
     alert('Please select a star rating!'); return;
   }
+  // FIX 5: Added Authorization header to rating fetch
   await fetch(`${BACKEND}/ride/rate`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
     body: JSON.stringify({
       rideId: currentRatingRideId,
       driverRating: currentDriverRating
@@ -588,7 +576,6 @@ function mobileNav(tab, btn) {
   document.getElementById(`tab-${tab}`).classList.add('active');
   btn.classList.add('active');
 
-  // On mobile, scroll panel into view
   if (window.innerWidth <= 768) {
     document.getElementById('panel').scrollIntoView({ behavior: 'smooth' });
   }
@@ -622,6 +609,7 @@ function setButtonLoading(loading) {
     btn.disabled = false;
   }
 }
+
 // ─── PWA INSTALL ─────────────────────────────────────────────────
 let deferredPrompt;
 
@@ -629,7 +617,6 @@ window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
 
-  // Show install button
   const installBtn = document.getElementById('install-btn');
   if (installBtn) {
     installBtn.style.display = 'block';
@@ -679,11 +666,9 @@ async function sendAIMessage() {
   const message = input.value.trim();
   if (!message) return;
 
-  // Add user message
   addAIMessage(message, 'user');
   input.value = '';
 
-  // Add loading
   const loadingId = 'loading-' + Date.now();
   addAIMessage('🤔 Thinking...', 'loading', loadingId);
 
@@ -698,14 +683,11 @@ async function sendAIMessage() {
     });
 
     const data = await res.json();
-    
-    // Remove loading
+
     document.getElementById(loadingId)?.remove();
 
     if (data.success) {
       const ai = data.data;
-
-      // Auto fill form fields
       let filled = [];
 
       if (ai.pickup) {
@@ -737,14 +719,12 @@ async function sendAIMessage() {
         document.getElementById('allow-sharing').checked = true;
       }
 
-      // Show response
       const response = filled.length > 0
         ? `✅ Got it! I've filled in:\n${filled.join('\n')}\n\n💡 ${ai.suggestion}`
         : `💡 ${ai.suggestion || "I couldn't find specific details. Try: 'Ride from Mumbai to Pune tomorrow 9am'"}`;
 
       addAIMessage(response, 'bot');
 
-      // Switch to book tab
       document.getElementById('tab-book').click();
 
     } else {
@@ -848,8 +828,6 @@ async function testPushNotification() {
   showToast('🔔 Test notification sent!');
 }
 
-// Auto subscribe when page loads
 window.addEventListener('load', () => {
   setTimeout(subscribeToPush, 3000);
 });
-};
