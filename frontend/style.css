@@ -734,3 +734,41 @@ main { display:flex; height:calc(100vh - 70px); }
   color: #555 !important;
   font-size: 0.72rem !important;
 }
+
+/* ─── FIX ROUTING EMOJI ICONS ────────────────────────────────── */
+.leaflet-routing-alt table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+}
+
+.leaflet-routing-alt tr {
+  display: table-row !important;
+  border-bottom: 1px solid #ddd !important;
+}
+
+.leaflet-routing-alt td {
+  display: table-cell !important;
+  padding: 5px 4px !important;
+  color: #000 !important;
+  vertical-align: middle !important;
+  line-height: 1.6 !important;
+}
+
+.leaflet-routing-alt td:nth-child(1) {
+  font-size: 1rem !important;
+  width: 28px !important;
+  text-align: center !important;
+  filter: grayscale(100%) !important;
+}
+
+.leaflet-routing-alt td:nth-child(2) {
+  font-size: 0.78rem !important;
+  color: #111 !important;
+}
+
+.leaflet-routing-alt td:nth-child(3) {
+  font-size: 0.72rem !important;
+  color: #555 !important;
+  text-align: right !important;
+  white-space: nowrap !important;
+}
