@@ -1,3 +1,7 @@
+//routingControl.on('routesfound', function(e));
+console.log('✅ Route found!', e.routes[0].instructions.length, 'steps');
+  // ... rest of code
+
 const BACKEND = window.location.hostname === 'localhost'
   ? 'http://localhost:3000'
   : 'https://rideshare-backend-e3ka.onrender.com';
@@ -848,3 +852,4 @@ async function testPushNotification() {
 window.addEventListener('load', () => {
   setTimeout(subscribeToPush, 3000);
 });
+};
