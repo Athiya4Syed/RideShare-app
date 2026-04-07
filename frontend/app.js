@@ -186,24 +186,9 @@ function drawRoute() {
     createMarker: () => null,
     router: L.Routing.osrmv1({
       serviceUrl: 'https://router.project-osrm.org/route/v1',
-      steps: true,
-      annotations: true
+      steps: true
     })
   }).addTo(map);
-
-  // Force show panel after 2 seconds even if routesfound doesn't fire
-setTimeout(() => {
-  if (!document.getElementById('custom-route-panel')) {
-    const panel = document.createElement('div');
-    panel.id = 'custom-route-panel';
-    panel.style.cssText = 'position:absolute;top:10px;right:10px;z-index:9999;background:#fff;color:#000;border-radius:8px;padding:10px 12px;width:280px;max-height:250px;overflow-y:auto;box-shadow:0 2px 10px rgba(0,0,0,0.3);font-size:0.78rem;';
-    panel.innerHTML = '<div style="font-weight:bold;margin-bottom:6px;">🗺️ Route · '
-      + currentDistanceKm.toFixed(1) + ' km · Est. ' 
-      + Math.round(currentDistanceKm * 2) + ' mins</div>'
-      + '<div style="color:#555;padding:4px 0;">📍 Route calculated successfully!</div>';
-    document.getElementById('map-container').appendChild(panel);
-  }
-}, 2000);
 
   routingControl.on('routesfound', function(e) {
     const route = e.routes[0];
@@ -215,81 +200,47 @@ setTimeout(() => {
     document.getElementById('route-info').style.display = 'flex';
     updateFareEstimate();
 
-    console.log('Route:', route);
-    console.log('Instructions:', route.instructions);
-    console.log('Legs:', route.legs);
+    // Remove old panel
+    const oldPanel = document.getElementById('custom-route-panel');
+    if (oldPanel) oldPanel.remove();
 
-    setTimeout(() => {
-      const lrmPanel = document.querySelector('.leaflet-top.leaflet-right');
-      if (lrmPanel) lrmPanel.style.display = 'none';
+    // Hide leaflet default panel
+    const lrmPanel = document.querySelector('.leaflet-top.leaflet-right');
+    if (lrmPanel) lrmPanel.style.display = 'none';
 
-      const oldPanel = document.getElementById('custom-route-panel');
-      if (oldPanel) oldPanel.remove();
+    const steps = route.instructions || [];
+    const icons = {
+      'Straight':'⬆️','SlightRight':'↗️','SlightLeft':'↖️',
+      'Right':'➡️','Left':'⬅️','SharpRight':'↪️',
+      'SharpLeft':'↩️','Roundabout':'🔄',
+      'DestinationReached':'🏁','WaypointReached':'📍','StartAt':'🟢'
+    };
 
-      const steps = route.instructions || [];
-      console.log('Steps count:', steps.length);
+    let stepsHTML = steps.length > 0 ? steps.map(s => {
+      const icon = icons[s.type] || '➡️';
+      const dist = s.distance > 0
+        ? (s.distance >= 1000 ? (s.distance/1000).toFixed(1)+' km' : Math.round(s.distance)+' m')
+        : '';
+      return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eee;">'
+        + '<span style="min-width:24px;text-align:center;">' + icon + '</span>'
+        + '<span style="flex:1;color:#111;font-size:0.78rem;">' + s.text + '</span>'
+        + '<span style="color:#555;font-size:0.72rem;white-space:nowrap;">' + dist + '</span>'
+        + '</div>';
+    }).join('') : '<div style="color:#555;padding:8px;">📍 ' + currentDistanceKm.toFixed(1) + ' km · ' + mins + ' mins</div>';
 
-      const icons = {
-        'Straight': '⬆️', 'SlightRight': '↗️', 'SlightLeft': '↖️',
-        'Right': '➡️', 'Left': '⬅️', 'SharpRight': '↪️',
-        'SharpLeft': '↩️', 'Roundabout': '🔄',
-        'DestinationReached': '🏁', 'WaypointReached': '📍',
-        'StartAt': '🟢'
-      };
+    const panel = document.createElement('div');
+    panel.id = 'custom-route-panel';
+    panel.style.cssText = 'position:absolute;top:10px;right:10px;z-index:9999;background:#fff;color:#000;border-radius:8px;padding:10px 12px;width:280px;max-height:250px;overflow-y:auto;box-shadow:0 2px 10px rgba(0,0,0,0.3);font-size:0.78rem;';
+    panel.innerHTML = '<div style="font-weight:bold;color:#000;margin-bottom:6px;">🗺️ '
+      + currentDistanceKm.toFixed(1) + ' km · ' + mins + ' mins</div>' + stepsHTML;
 
-      let stepsHTML = '';
-
-      if (steps.length > 0) {
-        steps.forEach(s => {
-          const icon = icons[s.type] || '➡️';
-          const dist = s.distance > 0
-            ? (s.distance >= 1000
-                ? (s.distance / 1000).toFixed(1) + ' km'
-                : Math.round(s.distance) + ' m')
-            : '';
-          stepsHTML += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eee;">'
-            + '<span style="font-size:1rem;min-width:24px;text-align:center;">' + icon + '</span>'
-            + '<span style="flex:1;color:#111;font-size:0.78rem;">' + s.text + '</span>'
-            + '<span style="color:#555;font-size:0.72rem;white-space:nowrap;">' + dist + '</span>'
-            + '</div>';
-        });
-      } else {
-        stepsHTML = '<div style="color:#555;font-size:0.78rem;padding:8px;">📍 Route calculated: '
-          + currentDistanceKm.toFixed(1) + ' km · ' + mins + ' mins</div>';
-      }
-
-      const panel = document.createElement('div');
-      panel.id = 'custom-route-panel';
-      panel.style.cssText = 'position:absolute;top:10px;right:10px;z-index:1000;background:#fff;color:#000;border-radius:8px;padding:10px 12px;width:280px;max-height:250px;overflow-y:auto;box-shadow:0 2px 10px rgba(0,0,0,0.3);font-family:Segoe UI,sans-serif;font-size:0.78rem;';
-
-      panel.innerHTML = '<div style="font-weight:bold;color:#000;margin-bottom:6px;font-size:0.82rem;">🗺️ Route · '
-        + currentDistanceKm.toFixed(1) + ' km · ' + mins + ' mins</div>'
-        + stepsHTML;
-
-      document.getElementById('map-container').appendChild(panel);
-    }, 800);
-  });
-}
-// ─── RESET MAP ───────────────────────────────────────────────────
-function resetMap() {
-  if (pickupMarker) map.removeLayer(pickupMarker);
-  if (destinationMarker) map.removeLayer(destinationMarker);
-  if (routingControl) map.removeControl(routingControl);
-  pickupMarker = destinationMarker = routingControl = null;
-  pickupLatLng = destinationLatLng = null;
-  currentDistanceKm = 0;
-
-  ['pickup-search', 'destination-search', 'pickup', 'destination'].forEach(id => {
-    document.getElementById(id).value = '';
+    document.getElementById('map-container').appendChild(panel);
   });
 
-  document.getElementById('route-info').style.display = 'none';
-  document.getElementById('fare-estimate-box').style.display = 'none';
-  document.getElementById('search-status').textContent = '';
-  document.getElementById('request-btn').disabled = true;
-  document.getElementById('step-hint').textContent = '🔍 Search pickup & destination on the map';
+  routingControl.on('routingerror', function(e) {
+    console.error('Routing error:', e);
+  });
 }
-
 // ─── REQUEST RIDE ────────────────────────────────────────────────
 async function requestRide() {
   const name = document.getElementById('name').value.trim();
