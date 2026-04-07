@@ -183,11 +183,7 @@ function drawRoute() {
     fitSelectedRoutes: true,
     show: false,
     lineOptions: { styles: [{ color:'#00d4ff', weight:5, opacity:0.9 }] },
-    createMarker: () => null,
-    router: L.Routing.osrmv1({
-      serviceUrl: 'https://router.project-osrm.org/route/v1',
-      steps: true
-    })
+    createMarker: () => null
   }).addTo(map);
 
   routingControl.on('routesfound', function(e) {
@@ -200,99 +196,73 @@ function drawRoute() {
     document.getElementById('route-info').style.display = 'flex';
     updateFareEstimate();
 
-    // Remove old panel
-    const oldPanel = document.getElementById('custom-route-panel');
-    if (oldPanel) oldPanel.remove();
-
     // Hide leaflet default panel
     const lrmPanel = document.querySelector('.leaflet-top.leaflet-right');
     if (lrmPanel) lrmPanel.style.display = 'none';
 
-    const steps = route.instructions || [];
-    const icons = {
-      'Straight':'⬆️','SlightRight':'↗️','SlightLeft':'↖️',
-      'Right':'➡️','Left':'⬅️','SharpRight':'↪️',
-      'SharpLeft':'↩️','Roundabout':'🔄',
-      'DestinationReached':'🏁','WaypointReached':'📍','StartAt':'🟢'
-    };
+    // Fetch directions directly from OSRM
+    const url = `https://router.project-osrm.org/route/v1/driving/`
+      + `${pickupLatLng.lng},${pickupLatLng.lat};`
+      + `${destinationLatLng.lng},${destinationLatLng.lat}`
+      + `?steps=true&annotations=false&geometries=geojson&overview=false`;
 
-    let stepsHTML = steps.length > 0 ? steps.map(s => {
-      const icon = icons[s.type] || '➡️';
-      const dist = s.distance > 0
-        ? (s.distance >= 1000 ? (s.distance/1000).toFixed(1)+' km' : Math.round(s.distance)+' m')
-        : '';
-      return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eee;">'
-        + '<span style="min-width:24px;text-align:center;">' + icon + '</span>'
-        + '<span style="flex:1;color:#111;font-size:0.78rem;">' + s.text + '</span>'
-        + '<span style="color:#555;font-size:0.72rem;white-space:nowrap;">' + dist + '</span>'
-        + '</div>';
-    }).join('') : '<div style="color:#555;padding:8px;">📍 ' + currentDistanceKm.toFixed(1) + ' km · ' + mins + ' mins</div>';
+    fetch(url)
+      .then(r => r.json())
+      .then(data => {
+        const oldPanel = document.getElementById('custom-route-panel');
+        if (oldPanel) oldPanel.remove();
 
-    const panel = document.createElement('div');
-    panel.id = 'custom-route-panel';
-    panel.style.cssText = 'position:absolute;top:10px;right:10px;z-index:9999;background:#fff;color:#000;border-radius:8px;padding:10px 12px;width:280px;max-height:250px;overflow-y:auto;box-shadow:0 2px 10px rgba(0,0,0,0.3);font-size:0.78rem;';
-    panel.innerHTML = '<div style="font-weight:bold;color:#000;margin-bottom:6px;">🗺️ '
-      + currentDistanceKm.toFixed(1) + ' km · ' + mins + ' mins</div>' + stepsHTML;
+        const icons = {
+          'turn-slight-right':'↗️', 'turn-right':'➡️', 'turn-sharp-right':'↪️',
+          'turn-slight-left':'↖️', 'turn-left':'⬅️', 'turn-sharp-left':'↩️',
+          'straight':'⬆️', 'roundabout':'🔄', 'arrive':'🏁',
+          'depart':'🟢', 'merge':'🔀', 'fork':'🍴',
+          'end of road':'⬆️', 'continue':'⬆️'
+        };
 
-    document.getElementById('map-container').appendChild(panel);
-  });
+        let stepsHTML = '';
+        const legs = data.routes?.[0]?.legs || [];
+        legs.forEach(leg => {
+          (leg.steps || []).forEach(step => {
+            const maneuver = step.maneuver?.type || 'straight';
+            const modifier = step.maneuver?.modifier || '';
+            const key = modifier ? `${maneuver}-${modifier}` : maneuver;
+            const icon = icons[key] || icons[maneuver] || '➡️';
+            const name = step.name || '';
+            const dist = step.distance >= 1000
+              ? (step.distance / 1000).toFixed(1) + ' km'
+              : Math.round(step.distance) + ' m';
 
-  routingControl.on('routingerror', function(e) {
-    console.error('Routing error:', e);
-  });
-}
-// ─── REQUEST RIDE ────────────────────────────────────────────────
-async function requestRide() {
-  const name = document.getElementById('name').value.trim();
-  const pickup = document.getElementById('pickup').value.trim();
-  const destination = document.getElementById('destination').value.trim();
-  const scheduledTime = document.getElementById('scheduled-time').value;
-  const allowSharing = document.getElementById('allow-sharing').checked;
-  const statusBox = document.getElementById('status-box');
+            if (step.distance > 0) {
+              stepsHTML += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eee;">'
+                + '<span style="min-width:24px;text-align:center;font-size:1rem;">' + icon + '</span>'
+                + '<span style="flex:1;color:#111;font-size:0.78rem;">' + (name || maneuver) + '</span>'
+                + '<span style="color:#555;font-size:0.72rem;white-space:nowrap;">' + dist + '</span>'
+                + '</div>';
+            }
+          });
+        });
 
-  if (!name) { statusBox.innerHTML = `<span class="error">⚠️ Enter your name!</span>`; return; }
+        if (!stepsHTML) {
+          stepsHTML = '<div style="color:#555;padding:8px;">📍 ' + currentDistanceKm.toFixed(1) + ' km · ' + mins + ' mins</div>';
+        }
 
-  setButtonLoading(true);
-  statusBox.innerHTML = `⏳ Booking your ${currentRideType} ride...`;
+        const panel = document.createElement('div');
+        panel.id = 'custom-route-panel';
+        panel.style.cssText = 'position:absolute;top:10px;right:10px;z-index:9999;background:#fff;color:#000;border-radius:8px;padding:10px 12px;width:280px;max-height:250px;overflow-y:auto;box-shadow:0 2px 10px rgba(0,0,0,0.3);font-size:0.78rem;';
+        panel.innerHTML = '<div style="font-weight:bold;color:#000;margin-bottom:6px;">🗺️ '
+          + currentDistanceKm.toFixed(1) + ' km · ' + mins + ' mins</div>' + stepsHTML;
 
-  try {
-    const res = await fetch(`${BACKEND}/ride/request`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        name, pickup, destination,
-        pickupLat: pickupLatLng?.lat, pickupLng: pickupLatLng?.lng,
-        destLat: destinationLatLng?.lat, destLng: destinationLatLng?.lng,
-        rideType: currentRideType,
-        allowSharing: (currentRideType === 'shared' || currentRideType === 'auto') ? allowSharing : false,
-        scheduledTime: scheduledTime || null,
-        distanceKm: currentDistanceKm.toFixed(1)
+        document.getElementById('map-container').appendChild(panel);
       })
-    });
-
-    const data = await res.json();
-    if (res.ok) {
-      setButtonLoading(false);
-      showToast(`✅ ${currentRideType} ride booked!`);
-      const icon = { bike: '🏍️', auto: '🛺', solo: '🚗', shared: '🚗' }[currentRideType];
-      const scheduled = scheduledTime ? `<br/><small>⏰ Scheduled: ${new Date(scheduledTime).toLocaleString()}</small>` : '';
-      statusBox.innerHTML = `
-        <span class="success">${icon} Ride #${data.ride.id} booked!</span>
-        <br/><small>💰 Fare: ₹${data.ride.estimatedFare}</small>
-        ${scheduled}
-      `;
-      document.getElementById('name').value = '';
-    } else {
-      setButtonLoading(false);
-      statusBox.innerHTML = `<span class="error">❌ ${data.error}</span>`;
-    }
-  } catch (e) {
-    setButtonLoading(false);
-    statusBox.innerHTML = `<span class="error">❌ Server not running!</span>`;
-  }
+      .catch(() => {
+        const panel = document.createElement('div');
+        panel.id = 'custom-route-panel';
+        panel.style.cssText = 'position:absolute;top:10px;right:10px;z-index:9999;background:#fff;color:#000;border-radius:8px;padding:10px 12px;width:280px;box-shadow:0 2px 10px rgba(0,0,0,0.3);font-size:0.78rem;';
+        panel.innerHTML = '🗺️ ' + currentDistanceKm.toFixed(1) + ' km · ' + mins + ' mins';
+        document.getElementById('map-container').appendChild(panel);
+      });
+  });
 }
 
 // ─── SOCKET.IO ───────────────────────────────────────────────────
