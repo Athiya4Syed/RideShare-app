@@ -168,7 +168,6 @@ function placeMarker(type, latlng, label) {
   }
 }
 
-// ─── DRAW ROUTE ──────────────────────────────────────────────────
 function drawRoute() {
   if (!pickupLatLng || !destinationLatLng) return;
   if (routingControl) map.removeControl(routingControl);
@@ -183,10 +182,13 @@ function drawRoute() {
     draggableWaypoints: false,
     fitSelectedRoutes: true,
     show: false,
-    collapsible: false,
-    showAlternatives: false,
-    lineOptions: { styles: [{ color: '#00d4ff', weight: 5, opacity: 0.9 }] },
-    createMarker: () => null
+    lineOptions: { styles: [{ color:'#00d4ff', weight:5, opacity:0.9 }] },
+    createMarker: () => null,
+    router: L.Routing.osrmv1({
+      serviceUrl: 'https://router.project-osrm.org/route/v1',
+      steps: true,
+      annotations: true
+    })
   }).addTo(map);
 
   routingControl.on('routesfound', function(e) {
@@ -199,12 +201,19 @@ function drawRoute() {
     document.getElementById('route-info').style.display = 'flex';
     updateFareEstimate();
 
+    console.log('Route:', route);
+    console.log('Instructions:', route.instructions);
+    console.log('Legs:', route.legs);
+
     setTimeout(() => {
       const lrmPanel = document.querySelector('.leaflet-top.leaflet-right');
       if (lrmPanel) lrmPanel.style.display = 'none';
 
       const oldPanel = document.getElementById('custom-route-panel');
       if (oldPanel) oldPanel.remove();
+
+      const steps = route.instructions || [];
+      console.log('Steps count:', steps.length);
 
       const icons = {
         'Straight': '⬆️', 'SlightRight': '↗️', 'SlightLeft': '↖️',
@@ -214,55 +223,39 @@ function drawRoute() {
         'StartAt': '🟢'
       };
 
-      const steps = route.instructions || [];
-
       let stepsHTML = '';
-      steps.forEach(s => {
-        const icon = icons[s.type] || '➡️';
-        const dist = s.distance > 0
-          ? (s.distance >= 1000
-            ? (s.distance / 1000).toFixed(1) + ' km'
-            : Math.round(s.distance) + ' m')
-          : '';
 
-        stepsHTML += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eee;">'
-          + '<span style="font-size:1rem;min-width:24px;text-align:center;">' + icon + '</span>'
-          + '<span style="flex:1;color:#111;font-size:0.78rem;">' + s.text + '</span>'
-          + '<span style="color:#555;font-size:0.72rem;white-space:nowrap;">' + dist + '</span>'
-          + '</div>';
-      });
+      if (steps.length > 0) {
+        steps.forEach(s => {
+          const icon = icons[s.type] || '➡️';
+          const dist = s.distance > 0
+            ? (s.distance >= 1000
+                ? (s.distance / 1000).toFixed(1) + ' km'
+                : Math.round(s.distance) + ' m')
+            : '';
+          stepsHTML += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eee;">'
+            + '<span style="font-size:1rem;min-width:24px;text-align:center;">' + icon + '</span>'
+            + '<span style="flex:1;color:#111;font-size:0.78rem;">' + s.text + '</span>'
+            + '<span style="color:#555;font-size:0.72rem;white-space:nowrap;">' + dist + '</span>'
+            + '</div>';
+        });
+      } else {
+        stepsHTML = '<div style="color:#555;font-size:0.78rem;padding:8px;">📍 Route calculated: '
+          + currentDistanceKm.toFixed(1) + ' km · ' + mins + ' mins</div>';
+      }
 
       const panel = document.createElement('div');
       panel.id = 'custom-route-panel';
-      panel.style.cssText = `
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        z-index: 1000;
-        background: #ffffff;
-        color: #000000;
-        border-radius: 8px;
-        padding: 10px 12px;
-        width: 280px;
-        max-height: 250px;
-        overflow-y: auto;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        font-family: Segoe UI, sans-serif;
-        font-size: 0.78rem;
-        box-sizing: border-box;
-      `;
+      panel.style.cssText = 'position:absolute;top:10px;right:10px;z-index:1000;background:#fff;color:#000;border-radius:8px;padding:10px 12px;width:280px;max-height:250px;overflow-y:auto;box-shadow:0 2px 10px rgba(0,0,0,0.3);font-family:Segoe UI,sans-serif;font-size:0.78rem;';
 
-      panel.innerHTML = '<div style="font-weight:bold;color:#000;margin-bottom:6px;font-size:0.82rem;">'
-        + '🗺️ Turn-by-turn &nbsp;|&nbsp; '
-        + currentDistanceKm.toFixed(1) + ' km · ' + mins + ' mins'
-        + '</div>'
+      panel.innerHTML = '<div style="font-weight:bold;color:#000;margin-bottom:6px;font-size:0.82rem;">🗺️ Route · '
+        + currentDistanceKm.toFixed(1) + ' km · ' + mins + ' mins</div>'
         + stepsHTML;
 
       document.getElementById('map-container').appendChild(panel);
-    }, 500);
+    }, 800);
   });
 }
-
 // ─── RESET MAP ───────────────────────────────────────────────────
 function resetMap() {
   if (pickupMarker) map.removeLayer(pickupMarker);
