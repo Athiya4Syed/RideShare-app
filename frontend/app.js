@@ -175,94 +175,36 @@ function drawRoute() {
   const old = document.getElementById('custom-route-panel');
   if (old) old.remove();
 
-  routingControl = L.Routing.control({
-    waypoints: [L.latLng(pickupLatLng), L.latLng(destinationLatLng)],
-    routeWhileDragging: false,
-    addWaypoints: false,
-    draggableWaypoints: false,
-    fitSelectedRoutes: true,
-    show: false,
-    lineOptions: { styles: [{ color:'#00d4ff', weight:5, opacity:0.9 }] },
-    createMarker: () => null
+  // Draw straight line on map
+  const polyline = L.polyline([pickupLatLng, destinationLatLng], {
+    color: '#00d4ff', weight: 5, opacity: 0.9
   }).addTo(map);
 
-  routingControl.on('routesfound', function(e) {
-    const route = e.routes[0];
-    currentDistanceKm = (route.summary.totalDistance / 1000);
-    const mins = Math.round(route.summary.totalTime / 60);
+  routingControl = { remove: () => map.removeLayer(polyline) };
 
-    document.getElementById('route-distance').textContent = `📏 ${currentDistanceKm.toFixed(1)} km`;
-    document.getElementById('route-duration').textContent = `⏱️ ${mins} mins`;
-    document.getElementById('route-info').style.display = 'flex';
-    updateFareEstimate();
+  // Calculate distance
+  currentDistanceKm = getDistanceKm(
+    pickupLatLng.lat, pickupLatLng.lng,
+    destinationLatLng.lat, destinationLatLng.lng
+  );
+  const mins = Math.round(currentDistanceKm * 2.5);
 
-    const lrmPanel = document.querySelector('.leaflet-top.leaflet-right');
-    if (lrmPanel) lrmPanel.style.display = 'none';
+  document.getElementById('route-distance').textContent = `📏 ${currentDistanceKm.toFixed(1)} km`;
+  document.getElementById('route-duration').textContent = `⏱️ ~${mins} mins`;
+  document.getElementById('route-info').style.display = 'flex';
+  updateFareEstimate();
 
-    showRoutePanel(currentDistanceKm, mins, route.instructions || []);
-  });
-
-  routingControl.on('routingerror', function(e) {
-    console.log('Routing error, using straight line distance');
-    if (pickupLatLng && destinationLatLng) {
-      currentDistanceKm = getDistanceKm(
-        pickupLatLng.lat, pickupLatLng.lng,
-        destinationLatLng.lat, destinationLatLng.lng
-      );
-      const mins = Math.round(currentDistanceKm * 2);
-      document.getElementById('route-distance').textContent = `📏 ${currentDistanceKm.toFixed(1)} km`;
-      document.getElementById('route-duration').textContent = `⏱️ ~${mins} mins`;
-      document.getElementById('route-info').style.display = 'flex';
-      updateFareEstimate();
-      showRoutePanel(currentDistanceKm, mins, []);
-    }
-  });
-}
-
-function showRoutePanel(distKm, mins, steps) {
-  const old = document.getElementById('custom-route-panel');
-  if (old) old.remove();
-
-  const icons = {
-    'Straight':'⬆️', 'SlightRight':'↗️', 'SlightLeft':'↖️',
-    'Right':'➡️', 'Left':'⬅️', 'SharpRight':'↪️',
-    'SharpLeft':'↩️', 'Roundabout':'🔄',
-    'DestinationReached':'🏁', 'WaypointReached':'📍', 'StartAt':'🟢'
-  };
-
-  let stepsHTML = '';
-  if (steps.length > 0) {
-    steps.forEach(s => {
-      const icon = icons[s.type] || '➡️';
-      const dist = s.distance > 0
-        ? (s.distance >= 1000 ? (s.distance/1000).toFixed(1)+' km' : Math.round(s.distance)+' m')
-        : '';
-      stepsHTML += '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #eee;">'
-        + '<span style="min-width:24px;text-align:center;">' + icon + '</span>'
-        + '<span style="flex:1;color:#111;font-size:0.78rem;">' + s.text + '</span>'
-        + '<span style="color:#555;font-size:0.72rem;white-space:nowrap;">' + dist + '</span>'
-        + '</div>';
-    });
-  } else {
-    stepsHTML = '<div style="color:#555;padding:4px 0;">📍 Route from pickup to destination</div>';
-  }
-
+  // Show simple panel
   const panel = document.createElement('div');
   panel.id = 'custom-route-panel';
-  panel.style.cssText = 'position:absolute;top:10px;right:10px;z-index:9999;background:#fff;color:#000;border-radius:8px;padding:10px 12px;width:280px;max-height:250px;overflow-y:auto;box-shadow:0 2px 10px rgba(0,0,0,0.3);font-size:0.78rem;';
-  panel.innerHTML = '<div style="font-weight:bold;color:#000;margin-bottom:6px;border-bottom:2px solid #00d4ff;padding-bottom:6px;">🗺️ '
-    + distKm.toFixed(1) + ' km · ' + mins + ' mins</div>'
-    + stepsHTML;
+  panel.style.cssText = 'position:absolute;top:10px;right:10px;z-index:9999;background:#fff;color:#000;border-radius:8px;padding:12px;width:220px;box-shadow:0 2px 10px rgba(0,0,0,0.3);font-size:0.82rem;';
+  panel.innerHTML = '<div style="font-weight:bold;color:#000;margin-bottom:8px;border-bottom:2px solid #00d4ff;padding-bottom:6px;">🗺️ Route Info</div>'
+    + '<div style="padding:4px 0;">📏 Distance: <b>' + currentDistanceKm.toFixed(1) + ' km</b></div>'
+    + '<div style="padding:4px 0;">⏱️ Est. Time: <b>~' + mins + ' mins</b></div>'
+    + '<div style="padding:4px 0;">📍 ' + document.getElementById('pickup').value.split(',')[0] + '</div>'
+    + '<div style="padding:4px 0;">🏁 ' + document.getElementById('destination').value.split(',')[0] + '</div>';
 
   document.getElementById('map-container').appendChild(panel);
-}
-
-function getDistanceKm(lat1, lng1, lat2, lng2) {
-  const R = 6371;
-  const dLat = (lat2-lat1) * Math.PI/180;
-  const dLng = (lng2-lng1) * Math.PI/180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 // ─── SOCKET.IO ───────────────────────────────────────────────────
 // FIX 2: Use BACKEND variable instead of hardcoded prod URL
