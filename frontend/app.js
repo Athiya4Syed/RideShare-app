@@ -191,6 +191,20 @@ function drawRoute() {
     })
   }).addTo(map);
 
+  // Force show panel after 2 seconds even if routesfound doesn't fire
+setTimeout(() => {
+  if (!document.getElementById('custom-route-panel')) {
+    const panel = document.createElement('div');
+    panel.id = 'custom-route-panel';
+    panel.style.cssText = 'position:absolute;top:10px;right:10px;z-index:9999;background:#fff;color:#000;border-radius:8px;padding:10px 12px;width:280px;max-height:250px;overflow-y:auto;box-shadow:0 2px 10px rgba(0,0,0,0.3);font-size:0.78rem;';
+    panel.innerHTML = '<div style="font-weight:bold;margin-bottom:6px;">🗺️ Route · '
+      + currentDistanceKm.toFixed(1) + ' km · Est. ' 
+      + Math.round(currentDistanceKm * 2) + ' mins</div>'
+      + '<div style="color:#555;padding:4px 0;">📍 Route calculated successfully!</div>';
+    document.getElementById('map-container').appendChild(panel);
+  }
+}, 2000);
+
   routingControl.on('routesfound', function(e) {
     const route = e.routes[0];
     currentDistanceKm = (route.summary.totalDistance / 1000);
