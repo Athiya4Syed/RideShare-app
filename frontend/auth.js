@@ -1,7 +1,14 @@
 const BACKEND = window.location.hostname === 'localhost'
   ? 'http://localhost:3000'
   : 'https://rideshare-backend-e3ka.onrender.com';
+
 let selectedRole = 'passenger';
+let otpVerified = false;
+
+// ─── AUTO REDIRECT IF ALREADY LOGGED IN ──────────────────────────
+if (localStorage.getItem('token')) {
+  window.location.href = 'index.html';
+}
 
 // ─── TAB SWITCHING ───────────────────────────────────────────────
 function switchAuthTab(tab) {
@@ -19,13 +26,12 @@ function selectRole(role) {
 }
 
 // ─── SIGNUP ──────────────────────────────────────────────────────
-
-
 async function signup() {
   if (!otpVerified) {
-  showError('signup-error', '⚠️ Please verify your phone number first!');
-  return;
+    showError('signup-error', '⚠️ Please verify your phone number first!');
+    return;
   }
+
   const name     = document.getElementById('signup-name').value.trim();
   const email    = document.getElementById('signup-email').value.trim();
   const phone    = document.getElementById('signup-phone').value.trim();
@@ -33,8 +39,6 @@ async function signup() {
   const errorEl  = document.getElementById('signup-error');
 
   errorEl.textContent = '';
-
-  
 
   if (!name || !email || !password) {
     errorEl.textContent = '⚠️ Please fill in all fields!'; return;
@@ -53,11 +57,8 @@ async function signup() {
     const data = await res.json();
 
     if (res.ok) {
-      // Save token and user info
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-
-      // Redirect to main app
       window.location.href = 'index.html';
     } else {
       errorEl.textContent = `❌ ${data.error}`;
@@ -100,14 +101,7 @@ async function login() {
   }
 }
 
-// ─── AUTO REDIRECT IF ALREADY LOGGED IN ──────────────────────────
-if (localStorage.getItem('token')) {
-  window.location.href = 'index.html';
-}
-
-// ─── OTP VERIFICATION ─────────────────────────────────────────
-let otpVerified = false;
-
+// ─── SEND OTP ────────────────────────────────────────────────────
 async function sendOTP() {
   const phone = document.getElementById('signup-phone').value.trim();
   const statusEl = document.getElementById('otp-status');
@@ -128,36 +122,25 @@ async function sendOTP() {
   statusEl.innerHTML = '';
 
   try {
-    await axios.get('https://www.fast2sms.com/dev/bulkV2', {
-      params: {
-        authorization: process.env.FAST2SMS_API_KEY,
-        variables_values: otp,
-        route: 'otp',
-        numbers: phone.replace('+91', '').replace(/\s/g, '')
-      }
+    const res = await fetch(`${BACKEND}/auth/send-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone })
     });
-
-    console.log(`✅ OTP sent to ${phone}`);
-    res.json({ success: true, message: '✅ OTP sent successfully!' });
-
-  } catch (err) {
-    console.error('Fast2SMS error:', err.response?.data || err.message);
-    res.status(500).json({ error: 'Failed to send OTP!' });
-  }
 
     const data = await res.json();
 
     if (res.ok) {
       statusEl.innerHTML = '<span style="color:#00ff88">✅ OTP sent to your phone!</span>';
       document.getElementById('otp-section').style.display = 'block';
-      
+
       // Countdown timer
       let seconds = 300;
       const timer = setInterval(() => {
         seconds--;
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
-        document.getElementById('otp-timer').textContent = 
+        document.getElementById('otp-timer').textContent =
           `⏳ OTP expires in ${mins}:${secs.toString().padStart(2, '0')}`;
         if (seconds <= 0) {
           clearInterval(timer);
@@ -179,6 +162,7 @@ async function sendOTP() {
   }
 }
 
+// ─── VERIFY OTP ──────────────────────────────────────────────────
 async function verifyOTP() {
   const phone = document.getElementById('signup-phone').value.trim();
   const otp = document.getElementById('otp-input').value.trim();
@@ -218,4 +202,9 @@ async function verifyOTP() {
     btn.disabled = false;
     btn.textContent = '✅ Verify OTP';
   }
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = msg;
 }
