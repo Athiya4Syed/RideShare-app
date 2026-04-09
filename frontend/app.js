@@ -700,3 +700,38 @@ async function testPushNotification() {
 window.addEventListener('load', () => {
   setTimeout(subscribeToPush, 3000);
 });
+
+// ─── DISTANCE CALCULATOR ─────────────────────────────────────────
+function getDistanceKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 +
+    Math.cos(lat1 * Math.PI/180) *
+    Math.cos(lat2 * Math.PI/180) *
+    Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ─── RESET MAP ───────────────────────────────────────────────────
+function resetMap() {
+  if (pickupMarker) map.removeLayer(pickupMarker);
+  if (destinationMarker) map.removeLayer(destinationMarker);
+  if (routingControl) routingControl.remove();
+  pickupMarker = destinationMarker = routingControl = null;
+  pickupLatLng = destinationLatLng = null;
+  currentDistanceKm = 0;
+
+  const panel = document.getElementById('custom-route-panel');
+  if (panel) panel.remove();
+
+  ['pickup-search','destination-search','pickup','destination'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+
+  document.getElementById('route-info').style.display = 'none';
+  document.getElementById('fare-estimate-box').style.display = 'none';
+  document.getElementById('search-status').textContent = '';
+  document.getElementById('request-btn').disabled = true;
+  document.getElementById('step-hint').textContent = '🔍 Search pickup & destination on the map';
+}
