@@ -128,11 +128,22 @@ async function sendOTP() {
   statusEl.innerHTML = '';
 
   try {
-    const res = await fetch(`${BACKEND}/auth/send-otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone })
+    await axios.get('https://www.fast2sms.com/dev/bulkV2', {
+      params: {
+        authorization: process.env.FAST2SMS_API_KEY,
+        variables_values: otp,
+        route: 'otp',
+        numbers: phone.replace('+91', '').replace(/\s/g, '')
+      }
     });
+
+    console.log(`✅ OTP sent to ${phone}`);
+    res.json({ success: true, message: '✅ OTP sent successfully!' });
+
+  } catch (err) {
+    console.error('Fast2SMS error:', err.response?.data || err.message);
+    res.status(500).json({ error: 'Failed to send OTP!' });
+  }
 
     const data = await res.json();
 

@@ -9,9 +9,7 @@ const Anthropic = require('@anthropic-ai/sdk');
 const webpush = require('web-push');
 require('dotenv').config();
 
-const twilio = require('twilio');
-const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-
+const axios = require('axios');
 const app = express();
 const server = http.createServer(app);
 
