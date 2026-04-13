@@ -320,7 +320,6 @@ app.post('/auth/send-otp', async (req, res) => {
     numbers: phone.replace('+91', '').replace(/\s/g, '')
   }
 });
-
     console.log(`✅ OTP sent to ${phone}`);
     res.json({ success: true, message: '✅ OTP sent successfully!' });
 
