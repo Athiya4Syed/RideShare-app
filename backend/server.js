@@ -311,11 +311,14 @@ app.post('/auth/send-otp', async (req, res) => {
   });
 
   try {
-    await twilioClient.messages.create({
-      body: `Your RideShare OTP is: ${otp}. Valid for 5 minutes.`,
-      from: process.env.TWILIO_PHONE_NUMBER,
-      to: phone
-    });
+    await axios.get('https://www.fast2sms.com/dev/bulkV2', {
+  params: {
+    authorization: process.env.FAST2SMS_API_KEY,
+    variables_values: otp,
+    route: 'otp',
+    numbers: phone.replace('+91', '').replace(/\s/g, '')
+  }
+});
 
     console.log(`✅ OTP sent to ${phone}`);
     res.json({ success: true, message: '✅ OTP sent successfully!' });
