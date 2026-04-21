@@ -313,8 +313,7 @@ app.post('/auth/send-otp', async (req, res) => {
   try {
     const phoneNumber = phone.replace('+91', '').replace(/\s/g, '');
 const otpResponse = await axios.get(
-  `https://2factor.in/API/V1/${process.env.TWOFACTOR_API_KEY}/SMS/${phoneNumber}/AUTOGEN/OTP1`
-
+  `https://2factor.in/API/V1/${process.env.TWOFACTOR_API_KEY}/SMS/${phoneNumber}/AUTOGEN`
 );
 const sessionId = otpResponse.data.Details;
 otpStore.set(phone, {
