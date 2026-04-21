@@ -311,15 +311,11 @@ app.post('/auth/send-otp', async (req, res) => {
   });
 
   try {
-    await axios.get('https://www.fast2sms.com/dev/bulkV2', {
-  params: {
-    authorization: process.env.FAST2SMS_API_KEY,
-    message: `Your RideShare OTP is ${otp}. Valid for 5 minutes.`,
-    language: 'english',
-    route: 'q',
-    numbers: phone.replace('+91', '').replace(/\s/g, '')
-  }
-});
+    const phoneNumber = phone.replace('+91', '').replace(/\s/g, '');
+await axios.get(
+  `https://2factor.in/API/V1/${process.env.TWOFACTOR_API_KEY}/SMS/${phoneNumber}/${otp}/OTP1`
+);
+
     console.log(`✅ OTP sent to ${phone}`);
     res.json({ success: true, message: '✅ OTP sent successfully!' });
 
