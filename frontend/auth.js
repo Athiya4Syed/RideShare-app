@@ -102,65 +102,22 @@ async function login() {
 }
 
 // ─── SEND OTP ────────────────────────────────────────────────────
-async function sendOTP() {
-  const phone = document.getElementById('signup-phone').value.trim();
-  const statusEl = document.getElementById('otp-status');
+const phoneNumber = phone.replace('+91', '').replace(/\s/g, '');
+const otpResponse = await axios.get(
+  `https://2factor.in/API/V1/${process.env.TWOFACTOR_API_KEY}/SMS/${phoneNumber}/AUTOGEN`
+);
 
-  if (!phone) {
-    statusEl.innerHTML = '<span style="color:#ff4d4d">⚠️ Enter phone number first!</span>';
-    return;
-  }
+console.log('2Factor response:', otpResponse.data);
+const sessionId = otpResponse.data.Details;
 
-  if (!phone.startsWith('+')) {
-    statusEl.innerHTML = '<span style="color:#ff4d4d">⚠️ Include country code e.g. +91XXXXXXXXXX</span>';
-    return;
-  }
+// Store session ID
+otpStore.set(phone, {
+  sessionId,
+  expiry: Date.now() + 5 * 60 * 1000
+});
 
-  const btn = document.getElementById('send-otp-btn');
-  btn.disabled = true;
-  btn.textContent = '📲 Sending...';
-  statusEl.innerHTML = '';
-
-  try {
-    const res = await fetch(`${BACKEND}/auth/send-otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone })
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
-      statusEl.innerHTML = '<span style="color:#00ff88">✅ OTP sent to your phone!</span>';
-      document.getElementById('otp-section').style.display = 'block';
-
-      // Countdown timer
-      let seconds = 300;
-      const timer = setInterval(() => {
-        seconds--;
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        document.getElementById('otp-timer').textContent =
-          `⏳ OTP expires in ${mins}:${secs.toString().padStart(2, '0')}`;
-        if (seconds <= 0) {
-          clearInterval(timer);
-          document.getElementById('otp-timer').textContent = '❌ OTP expired!';
-          btn.disabled = false;
-          btn.textContent = '📲 Resend OTP';
-        }
-      }, 1000);
-
-    } else {
-      statusEl.innerHTML = `<span style="color:#ff4d4d">❌ ${data.error}</span>`;
-      btn.disabled = false;
-      btn.textContent = '📲 Send OTP';
-    }
-  } catch (err) {
-    statusEl.innerHTML = '<span style="color:#ff4d4d">❌ Failed to send OTP!</span>';
-    btn.disabled = false;
-    btn.textContent = '📲 Send OTP';
-  }
-}
+console.log(`✅ OTP sent, session: ${sessionId}`);
+res.json({ success: true, message: '✅ OTP sent!' });
 
 // ─── VERIFY OTP ──────────────────────────────────────────────────
 app.post('/auth/verify-otp', async (req, res) => {
