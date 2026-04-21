@@ -312,9 +312,14 @@ app.post('/auth/send-otp', async (req, res) => {
 
   try {
     const phoneNumber = phone.replace('+91', '').replace(/\s/g, '');
-await axios.get(
-  `https://2factor.in/API/V1/${process.env.TWOFACTOR_API_KEY}/SMS/${phoneNumber}/${otp}/OTP1`
+const otpResponse = await axios.get(
+  `https://2factor.in/API/V1/${process.env.TWOFACTOR_API_KEY}/SMS/${phoneNumber}/AUTOGEN`
 );
+const sessionId = otpResponse.data.Details;
+otpStore.set(phone, {
+  sessionId,
+  expiry: Date.now() + 5 * 60 * 1000
+});
 
     console.log(`✅ OTP sent to ${phone}`);
     res.json({ success: true, message: '✅ OTP sent successfully!' });
