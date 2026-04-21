@@ -163,29 +163,43 @@ async function sendOTP() {
 }
 
 // ─── VERIFY OTP ──────────────────────────────────────────────────
-app.post('/auth/verify-otp', async (req, res) => {
-  const { phone, otp } = req.body;
-  const stored = otpStore.get(phone);
+async function verifyOTP() {
+  const phone = document.getElementById('signup-phone').value.trim();
+  const otp = document.getElementById('otp-input').value.trim();
+  const statusEl = document.getElementById('otp-status');
 
-  if (!stored) return res.status(400).json({ error: 'OTP not found. Request a new one!' });
-  if (Date.now() > stored.expiry) {
-    otpStore.delete(phone);
-    return res.status(400).json({ error: 'OTP expired. Request a new one!' });
+  if (!otp) {
+    statusEl.innerHTML = '<span style="color:#ff4d4d">⚠️ Enter OTP!</span>';
+    return;
   }
+
+  const btn = document.getElementById('verify-otp-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Verifying...';
 
   try {
-    const verifyRes = await axios.get(
-      `https://2factor.in/API/V1/${process.env.TWOFACTOR_API_KEY}/SMS/VERIFY/${stored.sessionId}/${otp}`
-    );
+    const res = await fetch(`${BACKEND}/auth/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, otp })
+    });
 
-    if (verifyRes.data.Details === 'OTP Matched') {
-      otpStore.delete(phone);
-      res.json({ success: true, message: '✅ Phone verified!' });
+    const data = await res.json();
+
+    if (res.ok) {
+      otpVerified = true;
+      statusEl.innerHTML = '<span style="color:#00ff88">✅ Phone verified!</span>';
+      btn.textContent = '✅ Verified!';
+      document.getElementById('otp-section').style.display = 'none';
+      document.getElementById('send-otp-btn').style.display = 'none';
     } else {
-      res.status(400).json({ error: 'Wrong OTP! Try again.' });
+      statusEl.innerHTML = `<span style="color:#ff4d4d">❌ ${data.error}</span>`;
+      btn.disabled = false;
+      btn.textContent = '✅ Verify OTP';
     }
   } catch (err) {
-    console.error('2Factor verify error:', err.response?.data || err.message);
-    res.status(500).json({ error: 'Verification failed!' });
+    statusEl.innerHTML = '<span style="color:#ff4d4d">❌ Verification failed!</span>';
+    btn.disabled = false;
+    btn.textContent = '✅ Verify OTP';
   }
-});
+}
