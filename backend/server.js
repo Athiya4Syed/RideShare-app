@@ -294,58 +294,65 @@ app.delete('/admin/ride/:id', adminMiddleware, async (req, res) => {
 });
 
 // ─── OTP VERIFICATION ─────────────────────────────────────────
-const otpStore = new Map(); // Store OTPs temporarily
+// ─── OTP VERIFICATION ─────────────────────────────────────────
+const otpStore = new Map();
 
-// Send OTP
 app.post('/auth/send-otp', async (req, res) => {
   const { phone } = req.body;
-  if (!phone) return res.status(400).json({ error: 'Phone number required' });
+  if (!phone) return res.status(400).json({ error: 'Phone required' });
 
-  // Generate 6 digit OTP
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  
-  // Store OTP with expiry (5 minutes)
-  otpStore.set(phone, {
-    otp,
-    expiry: Date.now() + 5 * 60 * 1000
-  });
+  const phoneNumber = phone.replace('+91', '').replace(/\s/g, '');
 
   try {
-    const phoneNumber = phone.replace('+91', '').replace(/\s/g, '');
-const otpResponse = await axios.get(
-  `https://2factor.in/API/V1/${process.env.TWOFACTOR_API_KEY}/SMS/${phoneNumber}/AUTOGEN`
-);
-const sessionId = otpResponse.data.Details;
-otpStore.set(phone, {
-  sessionId,
-  expiry: Date.now() + 5 * 60 * 1000
-});
-
-    console.log(`✅ OTP sent to ${phone}`);
-    res.json({ success: true, message: '✅ OTP sent successfully!' });
-
+    const response = await axios.get(
+      `https://2factor.in/API/V1/${process.env.TWOFACTOR_API_KEY}/SMS/${phoneNumber}/AUTOGEN`
+    );
+    
+    console.log('2Factor:', JSON.stringify(response.data));
+    
+    if (response.data.Status === 'Success') {
+      otpStore.set(phoneNumber, {
+        sessionId: response.data.Details,
+        expiry: Date.now() + 5 * 60 * 1000
+      });
+      res.json({ success: true, message: '✅ OTP sent!' });
+    } else {
+      res.status(500).json({ error: response.data.Details || 'Failed!' });
+    }
   } catch (err) {
-    console.error('Twilio error:', err);
-    res.status(500).json({ error: 'Failed to send OTP. Check phone number!' });
+    console.error('OTP error:', err.message);
+    res.status(500).json({ error: 'Failed to send OTP!' });
   }
 });
 
-// Verify OTP
-app.post('/auth/verify-otp', (req, res) => {
+app.post('/auth/verify-otp', async (req, res) => {
   const { phone, otp } = req.body;
-  if (!phone || !otp) return res.status(400).json({ error: 'Phone and OTP required' });
+  const phoneNumber = phone.replace('+91', '').replace(/\s/g, '');
+  const stored = otpStore.get(phoneNumber);
 
-  const stored = otpStore.get(phone);
-
-  if (!stored) return res.status(400).json({ error: 'OTP not found. Request a new one!' });
+  if (!stored) return res.status(400).json({ error: 'Request OTP first!' });
   if (Date.now() > stored.expiry) {
-    otpStore.delete(phone);
-    return res.status(400).json({ error: 'OTP expired. Request a new one!' });
+    otpStore.delete(phoneNumber);
+    return res.status(400).json({ error: 'OTP expired!' });
   }
-  if (stored.otp !== otp) return res.status(400).json({ error: 'Wrong OTP!' });
 
-  otpStore.delete(phone);
-  res.json({ success: true, message: '✅ Phone verified!' });
+  try {
+    const response = await axios.get(
+      `https://2factor.in/API/V1/${process.env.TWOFACTOR_API_KEY}/SMS/VERIFY/${stored.sessionId}/${otp}`
+    );
+    
+    console.log('Verify:', JSON.stringify(response.data));
+    
+    if (response.data.Details === 'OTP Matched') {
+      otpStore.delete(phoneNumber);
+      res.json({ success: true, message: '✅ Verified!' });
+    } else {
+      res.status(400).json({ error: 'Wrong OTP!' });
+    }
+  } catch (err) {
+    console.error('Verify error:', err.message);
+    res.status(500).json({ error: 'Verification failed!' });
+  }
 });
 
 // ─── SOCKET.IO ────────────────────────────────────────────────
