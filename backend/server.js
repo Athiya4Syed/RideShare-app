@@ -294,66 +294,62 @@ app.delete('/admin/ride/:id', adminMiddleware, async (req, res) => {
 });
 
 // ─── OTP VERIFICATION ─────────────────────────────────────────
-// ─── OTP VERIFICATION ─────────────────────────────────────────
-const otpStore = new Map();
+// ─── SEND OTP ────────────────────────────────────────────────────
+async function sendOTP() {
+  const phone = document.getElementById('signup-phone').value.trim();
+  const statusEl = document.getElementById('otp-status');
 
-app.post('/auth/send-otp', async (req, res) => {
-  const { phone } = req.body;
-  if (!phone) return res.status(400).json({ error: 'Phone required' });
-
-  const phoneNumber = phone.replace('+91', '').replace(/\s/g, '');
-
-  try {
-    const response = await axios.get(
-      `https://2factor.in/API/V1/${process.env.TWOFACTOR_API_KEY}/SMS/${phoneNumber}/AUTOGEN`
-    );
-    
-    console.log('2Factor:', JSON.stringify(response.data));
-    
-    if (response.data.Status === 'Success') {
-      otpStore.set(phoneNumber, {
-        sessionId: response.data.Details,
-        expiry: Date.now() + 5 * 60 * 1000
-      });
-      res.json({ success: true, message: '✅ OTP sent!' });
-    } else {
-      res.status(500).json({ error: response.data.Details || 'Failed!' });
-    }
-  } catch (err) {
-    console.error('OTP error:', err.message);
-    res.status(500).json({ error: 'Failed to send OTP!' });
-  }
-});
-
-app.post('/auth/verify-otp', async (req, res) => {
-  const { phone, otp } = req.body;
-  const phoneNumber = phone.replace('+91', '').replace(/\s/g, '');
-  const stored = otpStore.get(phoneNumber);
-
-  if (!stored) return res.status(400).json({ error: 'Request OTP first!' });
-  if (Date.now() > stored.expiry) {
-    otpStore.delete(phoneNumber);
-    return res.status(400).json({ error: 'OTP expired!' });
+  if (!phone) {
+    statusEl.textContent = '⚠️ Please enter your phone number!';
+    return;
   }
 
   try {
-    const response = await axios.get(
-      `https://2factor.in/API/V1/${process.env.TWOFACTOR_API_KEY}/SMS/VERIFY/${stored.sessionId}/${otp}`
-    );
-    
-    console.log('Verify:', JSON.stringify(response.data));
-    
-    if (response.data.Details === 'OTP Matched') {
-      otpStore.delete(phoneNumber);
-      res.json({ success: true, message: '✅ Verified!' });
+    const res = await fetch(`${BACKEND}/auth/send-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      statusEl.textContent = '✅ OTP sent!';
+      document.getElementById('otp-section').style.display = 'block';
     } else {
-      res.status(400).json({ error: 'Wrong OTP!' });
+      statusEl.textContent = `❌ ${data.error}`;
     }
-  } catch (err) {
-    console.error('Verify error:', err.message);
-    res.status(500).json({ error: 'Verification failed!' });
+  } catch (e) {
+    statusEl.textContent = '❌ Cannot reach server!';
   }
-});
+}
+
+// ─── VERIFY OTP ──────────────────────────────────────────────────
+async function verifyOTP() {
+  const phone = document.getElementById('signup-phone').value.trim();
+  const otp = document.getElementById('otp-input').value.trim();
+  const statusEl = document.getElementById('otp-status');
+
+  try {
+    const res = await fetch(`${BACKEND}/auth/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, otp })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      otpVerified = true;
+      statusEl.textContent = '✅ Phone verified!';
+      document.getElementById('otp-section').style.display = 'none';
+    } else {
+      statusEl.textContent = `❌ ${data.error}`;
+    }
+  } catch (e) {
+    statusEl.textContent = '❌ Cannot reach server!';
+  }
+}
 
 // ─── SOCKET.IO ────────────────────────────────────────────────
 io.on('connection', async (socket) => {
