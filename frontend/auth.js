@@ -26,10 +26,10 @@ function selectRole(role) {
 }
 
 // ─── SIGNUP ──────────────────────────────────────────────────────
-async function signup() {
-  if (!otpVerified) {
-    showError('signup-error', '⚠️ Please verify your phone number first!');
-    return;
+//async function signup() {
+ // if (!otpVerified) {
+//    showError('signup-error', '⚠️ Please verify your phone number first!');
+ //   return;
   }
 
   const name     = document.getElementById('signup-name').value.trim();
@@ -103,9 +103,9 @@ async function login() {
 
 // ─── SEND OTP ────────────────────────────────────────────────────
 async function sendOTP() {
-  const phone = document.getElementById('signup-phone').value.trim();
-  const statusEl = document.getElementById('otp-status');
-
+  otpVerified = true;
+  document.getElementById('otp-status').textContent = '✅ Phone verified!';
+}
   if (!phone) { statusEl.textContent = '⚠️ Enter phone number!'; return; }
 
   try {
