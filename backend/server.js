@@ -293,20 +293,20 @@ app.delete('/admin/ride/:id', adminMiddleware, async (req, res) => {
   res.json({ success: true, message: 'Ride deleted' });
 });
 
-// ─── OTP STORE ────────────────────────────────────────────────────
+// ─── OTP STORE ───────────────────────────────────────────────────
 const otpStore = new Map();
 
 // ─── SEND OTP ────────────────────────────────────────────────────
 app.post('/auth/send-otp', async (req, res) => {
   const { phone } = req.body;
   const phoneNumber = phone.replace('+91', '').replace(/\s/g, '');
-
   try {
     const otpRes = await axios.get(
       `https://2factor.in/API/V1/${process.env.TWOFACTOR_API_KEY}/SMS/${phoneNumber}/AUTOGEN`
     );
     const sessionId = otpRes.data.Details;
     otpStore.set(phone, { sessionId, expiry: Date.now() + 5 * 60 * 1000 });
+    console.log('OTP sent, stored key:', phone, 'sessionId:', sessionId);
     res.json({ success: true, message: '✅ OTP sent!' });
   } catch (err) {
     console.error('OTP send error:', err.message);
@@ -317,14 +317,15 @@ app.post('/auth/send-otp', async (req, res) => {
 // ─── VERIFY OTP ──────────────────────────────────────────────────
 app.post('/auth/verify-otp', async (req, res) => {
   const { phone, otp } = req.body;
+  console.log('Verifying phone:', phone, 'OTP:', otp);
+  console.log('Stored keys:', [...otpStore.keys()]);
+  
   const stored = otpStore.get(phone);
-
   if (!stored) return res.status(400).json({ error: 'OTP not found. Request a new one!' });
   if (Date.now() > stored.expiry) {
     otpStore.delete(phone);
     return res.status(400).json({ error: 'OTP expired. Request a new one!' });
   }
-
   try {
     const verifyRes = await axios.get(
       `https://2factor.in/API/V1/${process.env.TWOFACTOR_API_KEY}/SMS/VERIFY/${stored.sessionId}/${otp}`
@@ -336,6 +337,7 @@ app.post('/auth/verify-otp', async (req, res) => {
       res.status(400).json({ error: 'Wrong OTP! Try again.' });
     }
   } catch (err) {
+    console.error('Verify error:', err.response?.data || err.message);
     res.status(500).json({ error: 'Verification failed!' });
   }
 });
