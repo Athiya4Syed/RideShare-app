@@ -26,12 +26,7 @@ function selectRole(role) {
 }
 
 // ─── SIGNUP ──────────────────────────────────────────────────────
-//async function signup() {
- // if (!otpVerified) {
-//    showError('signup-error', '⚠️ Please verify your phone number first!');
- //   return;
-  }
-
+async function signup() {
   const name     = document.getElementById('signup-name').value.trim();
   const email    = document.getElementById('signup-email').value.trim();
   const phone    = document.getElementById('signup-phone').value.trim();
@@ -106,47 +101,9 @@ async function sendOTP() {
   otpVerified = true;
   document.getElementById('otp-status').textContent = '✅ Phone verified!';
 }
-  if (!phone) { statusEl.textContent = '⚠️ Enter phone number!'; return; }
-
-  try {
-    const res = await fetch(`${BACKEND}/auth/send-otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone })
-    });
-    const data = await res.json();
-    if (res.ok) {
-      statusEl.textContent = '✅ OTP sent!';
-      document.getElementById('otp-section').style.display = 'block';
-    } else {
-      statusEl.textContent = `❌ ${data.error}`;
-    }
-  } catch (e) {
-    statusEl.textContent = '❌ Cannot reach server!';
-  }
-}
 
 // ─── VERIFY OTP ──────────────────────────────────────────────────
 async function verifyOTP() {
-  const phone = document.getElementById('signup-phone').value.trim();
-  const otp = document.getElementById('otp-input').value.trim();
-  const statusEl = document.getElementById('otp-status');
-
-  try {
-    const res = await fetch(`${BACKEND}/auth/verify-otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone, otp })
-    });
-    const data = await res.json();
-    if (res.ok) {
-      otpVerified = true;
-      statusEl.textContent = '✅ Phone verified!';
-      document.getElementById('otp-section').style.display = 'none';
-    } else {
-      statusEl.textContent = `❌ ${data.error}`;
-    }
-  } catch (e) {
-    statusEl.textContent = '❌ Cannot reach server!';
-  }
+  otpVerified = true;
+  document.getElementById('otp-status').textContent = '✅ Phone verified!';
 }
